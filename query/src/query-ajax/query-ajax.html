@@ -1,0 +1,53 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<dom-module id="query-ajax">
+	<template>
+		<iron-ajax
+			url=""
+			params="[[_computeParams(query,limit)]]"
+			loading="{{loading}}"
+			>
+		</iron-ajax>
+	</template>
+	<script>
+		Polymer({
+			is: 'query-ajax',
+
+			properties: {
+				query: {
+					type: String,
+					value: '',
+				},
+
+				limit: {
+					type: Number,
+					value: 0,
+				},
+
+				data: {
+					type: Object,
+					value: function() {
+						return {};
+					},
+					readOnly: true,
+					notifies: true,
+				},
+
+				loading: {
+					type: Boolean,
+					value: false,
+					notifies: true,
+				},
+
+				error: {
+					type: Boolean,
+					value: false,
+					readOnly: true,
+					notifies: true,
+				},
+			},
+		});
+	</script>
+</dom-module>

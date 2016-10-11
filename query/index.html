@@ -1,0 +1,58 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>query</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <!--<script src="/bower_components/webcomponentsjs/webcomponents-lite.js"></script>-->
+    <script>
+      /* this script must run before Polymer is imported */
+      window.Polymer = {
+        dom: 'shadow',
+        lazyRegister: true
+      };
+    </script>
+    <link rel="import" id="app" href="/src/query-app/query-app.html">
+
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+        background-color: #55acee;
+      }
+
+      body.loading .skeleton {
+        display: -webkit-flex;
+        display: -ms-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-align-items: center;
+        -ms-align-items: center;
+        align-items: center;
+      }
+
+      body.loading .skeleton.header {
+        height: 256px;
+        background: rgba(0,0,0,0.2);
+        background: -webkit-linear-gradient(rgba(0,0,0,0.3) 64px, rgba(0,0,0,0));
+        background: -moz-linear-gradient(rgba(0,0,0,0.3) 64px, rgba(0,0,0,0));
+        background: -o-linear-gradient(rgba(0,0,0,0.3) 64px, rgba(0,0,0,0));
+        background: linear-gradient(rgba(0,0,0,0.3) 64px, rgba(0,0,0,0));
+      }
+    </style>
+  </head>
+  <body class="loading">
+    <!--<div class="skeleton">
+      <div class="skeleton header">
+      </div>
+    </div>-->
+
+    <query-app></query-app>
+
+    <script src="app.js" async></script>
+  </body>
+</html>

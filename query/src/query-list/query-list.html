@@ -1,0 +1,28 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../query-ajax/query-ajax.html">
+
+<dom-module id="query-list">
+	<template>
+		<style>
+			:host {
+				display: block;
+			}
+		</style>
+
+		<query-ajax>
+		
+	</template>
+	<script>
+		Polymer({
+			is: 'query-list',
+
+			properties: {
+				query: {
+					type: String,
+					value: ''
+				},
+			},
+		});
+	</script>
+</dom-module>

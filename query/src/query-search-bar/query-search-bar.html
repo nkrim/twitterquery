@@ -1,0 +1,117 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<!--
+A comment describing this element
+
+Example:
+
+    <my-elem></my-elem>
+
+Example:
+
+    <my-elem>
+      <h2>Hello my-elem</h2>
+    </my-elem>
+
+@demo demo/index.html
+-->
+
+<dom-module id="query-search-bar">
+	<template>
+		<style>
+			:host {
+				display: block;
+			}
+
+			#input {
+				@apply(--paper-font-headline);
+
+				width: 100%;
+				color: rgba(0,0,0,0.75);
+				background-color: #fff;
+				border: none;
+				border-radius: 12px;
+				padding: 8px 40px;
+
+				@apply(--query-search-bar-input);
+			}
+			#input:focus {
+				outline: none;
+			}
+			#input.empty:not(:focus) {
+				text-align: center;
+			}
+		</style>
+		
+		<input id="input" class$="[[_computeInputClass(value)]]" type="search" placeholder="[[placeholder]]">
+
+	</template>
+	<script>
+		Polymer({
+			is: 'query-search-bar',
+
+			properties: {
+				placeholder: {
+					type: String,
+					value: 'Search',
+				},
+
+				value: {
+					type: String,
+					value: '',
+					notify: true,
+					observer: '_handleValueChanged',
+				},
+			},
+
+			listeners: {
+				'input.input': '_handleInput',
+				'input.keyup': '_handleKeyUp',
+			},	
+
+			/**
+			 * Private functions
+			 */
+			_fireSearchEnter: function() {
+				this.fire('search-enter');
+			},
+
+			/**
+			 * Compute functions
+			 */
+			_computeInputClass: function(value) {
+				if(value === '')
+					return 'empty'
+				else
+					return '';
+			},
+
+			/**
+			 * Property change handlers
+			 */
+			_handleValueChanged: function(value) {
+				this.$.input.value = value;
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleKeyUp: function(e) {
+				if(!e)
+					e = window.event;
+				var keyCode = e.keyCode || e.which;
+				if(keyCode == '13') {
+					this._fireSearchEnter();
+				}
+			},
+
+			_handleInput: function() {
+				this.value = this.$.input.value;
+			},
+		});
+	</script>
+</dom-module>

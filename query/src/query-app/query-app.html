@@ -1,0 +1,174 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-scroll-effects/effects/resize-title.html">
+<link rel="import" href="../../bower_components/app-layout/app-scroll-effects/effects/blend-background.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<link rel="import" href="../../bower_components/neon-animation/neon-animatable.html">
+<link rel="import" href="../../bower_components/neon-animation/neon-animation-runner-behavior.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
+
+<link rel="import" href="../query-list/query-list.html">
+<link rel="import" href="../query-search-bar/query-search-bar.html">
+
+<dom-module id="query-app">
+  <template>
+    <style>
+      :root {
+        @apply(--paper-font-common-base);
+        --primary-color: #55acee;
+      }
+
+      :host {
+        display: block;
+      }
+
+      app-header-layout {
+        @apply(--layout-vertical);
+        @apply(--layout-center);
+        width: 100%;
+        height: 3000px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-top: 72px;
+      }
+
+      #mainHeader {
+        color: #fff;
+        text-align: center;
+        height: 256px;
+        background: rgba(0,0,0,0.2);
+        background: -webkit-linear-gradient(rgba(0,0,0,0.3) 96px, rgba(0,0,0,0));
+        background: -moz-linear-gradient(rgba(0,0,0,0.3) 96px, rgba(0,0,0,0));
+        background: -o-linear-gradient(rgba(0,0,0,0.3) 96px, rgba(0,0,0,0));
+        background: linear-gradient(rgba(0,0,0,0.3) 96px, rgba(0,0,0,0));
+        --app-header-background-rear-layer: {
+          background: rgba(0,0,0,0);
+        }
+      }
+      #mainHeader app-toolbar {
+        @apply(--layout-vertical);
+        @apply(--layout-center-justified);
+      }
+      #mainHeader app-toolbar > div {
+        text-align: center;
+      }
+      #mainHeader app-toolbar[condensed-title] {
+        @apply(--paper-font-display4);
+        font-size: 48px;
+        line-height: normal;
+      }
+      #mainHeader app-toolbar[main-title] {
+        @apply(--paper-font-display4);
+        height: 128px;
+        font-size: 96px;
+        transform-origin: center top;
+      }
+
+      #searchHeader {
+        height: 320px;
+        --app-header-background-rear-layer: {
+          background: rgba(0,0,0,0.2);
+        }
+      }
+      .search-toolbar {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-justified);
+        @apply(--layout-end);
+        height: 128px;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+      .search-container {
+        @apply(--layout-vertical);
+        @apply(--layout-center-justified);
+        height: 64px;
+        width: 1024px;
+      }
+      #search {
+        
+      }
+
+      #main {
+        width: 1024px;
+      }
+    </style>
+
+    <app-header-layout>
+      <app-header id="searchHeader" condenses fixed effects="blend-background">
+        <app-toolbar class="search-toolbar">
+          <div class="search-container">
+            <query-search-bar id="search" placeholder="Enter your search query here..."></query-search-bar>
+          </div>
+        </app-toolbar>
+      </app-header>
+      <app-header id="mainHeader" condenses fixed effects="resize-title blend-background">
+        <app-toolbar sticky top-item condensed-title>
+          <div>Twitter Query</div>
+        </app-toolbar>
+        <app-toolbar main-title>
+          <div>Twitter Query</div>
+        </app-toolbar>
+      </app-header>
+
+      <div id="main">
+        <query-main></query-main>
+      </div>
+    </app-header-layout>
+
+  </template>
+  <script>
+    Polymer({
+
+      is: 'query-app',
+
+      behaviors: [Polymer.NeonAnimationRunnerBehavior],
+
+      properties: {
+        animationConfig: {
+          value: function() {
+            return {
+              'entry': {
+                name: 'fade-in-animation',
+                node: this,
+                timing: {
+                  duration: 1000
+                }
+              },
+              'exit': {
+                name: 'fade-out-animation',
+                node: this
+              }
+            }
+          },
+        },
+      },
+
+      attached: function() {
+        this.show();
+        console.log('showing');
+      },
+
+      /**
+       * Public functions
+       */
+      show: function() {
+        this.playAnimation('entry');
+      },
+
+      hide: function() {
+        this.playAnimation('exit');
+      },
+
+    });
+  </script>
+</dom-module>

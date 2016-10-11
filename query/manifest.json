@@ -1,0 +1,7 @@
+{
+  "name": "query",
+  "short_name": "query",
+  "description": "Front-end for twitterquery app, which helps to search and download all photos from posts that match a given query to the twitter api",
+  "start_url": "/",
+  "display": "standalone"
+}
