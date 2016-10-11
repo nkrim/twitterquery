@@ -2,6 +2,8 @@
 Django development settings for twitterquery project.
 """
 
+from .shared_settings import *
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
