@@ -61,7 +61,7 @@
 				var results = e.detail.value;
 				if(results === null)
 					return;
-				if(results.success) {
+				if(this.$.list.error) {
 					this.$.list.error = '';
 					this.$.list.data = results.data;
 					console.log(JSON.stringify(results.data));
