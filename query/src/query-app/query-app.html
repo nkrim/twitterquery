@@ -15,7 +15,7 @@
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
 
-<link rel="import" href="../query-list/query-list.html">
+<link rel="import" href="../query-main/query-main.html">
 <link rel="import" href="../query-search-bar/query-search-bar.html">
 
 <dom-module id="query-app">
@@ -98,7 +98,7 @@
         
       }
 
-      #main {
+      .main-container {
         width: 1024px;
       }
     </style>
@@ -120,8 +120,8 @@
         </app-toolbar>
       </app-header>
 
-      <div id="main">
-        <query-list id="list"></query-list>
+      <div class="main-container">
+        <query-main id="main"></query-main>
       </div>
     </app-header-layout>
 
