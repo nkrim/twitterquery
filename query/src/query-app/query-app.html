@@ -121,7 +121,7 @@
       </app-header>
 
       <div id="main">
-        <query-main></query-main>
+        <query-list id="list"></query-list>
       </div>
     </app-header-layout>
 
@@ -153,9 +153,12 @@
         },
       },
 
+      listeners: {
+        'search.search-enter': '_handleSearchEnter',
+      }, 
+
       attached: function() {
         this.show();
-        console.log('showing');
       },
 
       /**
@@ -167,6 +170,14 @@
 
       hide: function() {
         this.playAnimation('exit');
+      },
+
+      /**
+       * Event handlers
+       */
+      _handleSearchEnter: function(e) {
+        this.$.list.query = this.$.search.value; 
+        this.$.list.makeQuery();
       },
 
     });

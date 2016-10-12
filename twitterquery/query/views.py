@@ -23,6 +23,16 @@ def makeJsonResponsePretty(data):
 	output = json.dumps(data, indent=4)
 	return HttpResponse(output, content_type='application/json')
 
+'''
+ERROR CODES
+- 0: Missing query parameter
+- 1: Empty query paramater
+- 2: No authentication details
+- 3: Error when querying twitter api
+- 4: Rate limit exceeded (includes the 'wait' value)
+- 5: Failed serach
+- 6: Exception during status iteration
+'''
 def query(request):
 	# HELPER FUNCTIONS FOR QUERY
 	def get_bearer(auth):

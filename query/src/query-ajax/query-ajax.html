@@ -5,8 +5,10 @@
 <dom-module id="query-ajax">
 	<template>
 		<iron-ajax
-			url=""
+			id="ajax"
+			url="/query"
 			params="[[_computeParams(query,limit)]]"
+			handle-as="json"
 			loading="{{loading}}"
 			>
 		</iron-ajax>
@@ -28,16 +30,8 @@
 
 				data: {
 					type: Object,
-					value: function() {
-						return {};
-					},
+					value: null,
 					readOnly: true,
-					notifies: true,
-				},
-
-				loading: {
-					type: Boolean,
-					value: false,
 					notifies: true,
 				},
 
@@ -47,6 +41,72 @@
 					readOnly: true,
 					notifies: true,
 				},
+
+				loading: {
+					type: Boolean,
+					value: false,
+					notifies: true,
+				},
+			},
+
+			listeners: {
+				'ajax.last-response-changed': '_handleAjaxResponse',
+			},
+
+			/**
+			 * Public functions
+			 */
+			makeQuery: function() {
+				if(query.trim().length == 0)
+					this._setData({'message': 'Please enter a search query.'});
+				else
+					this.$.ajax.generateRequest();
+			},
+
+			/**
+			 * Compute functions
+			 */
+			_computeParams: function(query, limit) {
+				var params = {};
+
+				if(query !== null && query !== '')
+					params['q'] = query;
+				
+				if(limit > 0)
+					params['limit'] = limit;
+
+				return params;
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleAjaxResponse: function(e) {
+				var response = e.detail.value;
+				var data_cur = null;
+				if('success' in response) {
+					if(response.success && 'results' in response) {
+						data_cur = {'data': response.results};
+						success = true;
+					}
+					else if ('error' in response && 'code' in response) {
+						if(response.code == 4 && 'wait' in response) {
+							data_cur = {'error': 'Server has recieved too many requests, try again in '+response.wait+' seconds.'};
+						}
+						else {
+							data_cur = {'error': response.error};
+						}
+					}
+					else {
+						data_cur = {'error': 'Unknown error in retrieving data.'};
+					}
+				}
+				else {
+					data_cur = {'error': 'Unknown error in retrieving data.'};
+				}
+				data_cur.success = !('data' in data_cur);
+				this._setError(data_cur.success);
+				this._setData(data_cur);
 			},
 		});
 	</script>

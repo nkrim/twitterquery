@@ -1,16 +1,49 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
+
 <link rel="import" href="../query-ajax/query-ajax.html">
 
 <dom-module id="query-list">
 	<template>
 		<style>
 			:host {
+				@apply(--layout-vertical);
+				@apply(--layout-center);
 				display: block;
+				position: relative;
+			}
+
+			#main {
+				width: 100%;
+				height: 100px;
+				background-color: #fff;
+				border-radius: 10px;
+				-webkit-transition: height 0.2s ease-in-out;
+				-moz-transition: height 0.2s ease-in-out;
+				-o-transition: height 0.2s ease-in-out;
+				transition: height 0.2s ease-in-out;
+			} 
+
+			.loading-spinner {
+				--paper-spinner-color: var(--primary-color, #000);
 			}
 		</style>
 
-		<query-ajax>
+		<query-ajax
+			id="ajax"
+			query="[[search]]"
+			loading="{{loading}}"
+			data="{{data}}"
+			error="{{error}}">
+		</query-ajax>
+
+		<paper-spinner-lite active="[[loading]]" class="loading-spinner"></paper-spinner-lite>
+		<div id="main">
+			<div id="message">[[errorMessage]]</div>
+		</div>
 		
 	</template>
 	<script>
@@ -20,9 +53,33 @@
 			properties: {
 				query: {
 					type: String,
-					value: ''
+					value: '',
+					observers: '_'
 				},
 			},
+
+			listeners: {
+				'ajax.data-changed': '_handleDataChanged',
+				'ajax.error-changed': '_handleErrorChanged',
+			},
+
+			ready: function() {
+				this.errorMessage = '';
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleDataChanged: function(e) {
+				var results = e.details.value;
+				if(results.success) {
+					this.errorMessage = JSON.stringify(results.data);
+				}
+				else {
+					this.errorMessage = reseults.error;
+				}
+			},
+
 		});
 	</script>
 </dom-module>
