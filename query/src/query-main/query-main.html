@@ -62,10 +62,12 @@
 				if(results.success) {
 					this.$.list.error = '';
 					this.$.list.data = results.data;
+					console.log(JSON.stringify(results.data));
 				}
 				else {
 					this.$.list.data = {};
 					this.$.list.error = results.error;
+					console.log(results.error);
 				}
 			},
 		});
