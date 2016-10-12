@@ -20,9 +20,7 @@
 		<query-ajax
 			id="ajax" auto
 			query="[[query]]"
-			loading="{{loading}}"
-			data="{{data}}"
-			error="{{error}}">
+			loading="{{loading}}">
 		</query-ajax>
 
 		<paper-spinner-lite active="[[loading]]" class="loading-spinner"></paper-spinner-lite>
@@ -47,7 +45,6 @@
 
 			listeners: {
 				'ajax.data-changed': '_handleDataChanged',
-				'ajax.error-changed': '_handleErrorChanged',
 			},
 
 			/**
