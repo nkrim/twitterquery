@@ -1,0 +1,76 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
+
+<link rel="import" href="../query-ajax/query-ajax.html">
+<link rel="import" href="../query-list/query-list.html">
+
+<dom-module id="query-main">
+	<template>
+		<style>
+			:host {
+				@apply(--layout-vertical);
+				@apply(--layout-center);
+				display: block;
+			}
+		</style>
+		
+		<query-ajax
+			id="ajax" auto
+			query="[[query]]"
+			loading="{{loading}}"
+			data="{{data}}"
+			error="{{error}}">
+		</query-ajax>
+
+		<paper-spinner-lite active="[[loading]]" class="loading-spinner"></paper-spinner-lite>
+		<query-list id="list"></query-list>
+
+	</template>
+	<script>
+		Polymer({
+			is: 'query-main',
+
+			properties: {
+				query: {
+					type: String,
+					value: '',
+				},
+
+				limit: {
+					type: Number,
+					value: 0,
+				}
+			},
+
+			listeners: {
+				'ajax.data-changed': '_handleDataChanged',
+				'ajax.error-changed': '_handleErrorChanged',
+			},
+
+			/**
+			 * Public functions
+			 */
+			makeQuery: function() {
+				this.$.ajax.makeQuery();
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleDataChanged: function(e) {
+				var results = e.details.value;
+				if(results.success) {
+					this.$.list.error = '';
+					this.$.list.data = results.data;
+				}
+				else {
+					this.$.list.data = {};
+					this.$.list.error = results.error;
+				}
+			},
+		});
+	</script>
+</dom-module>

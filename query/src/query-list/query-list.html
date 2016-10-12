@@ -2,16 +2,10 @@
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
 
-<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
-
-<link rel="import" href="../query-ajax/query-ajax.html">
-
 <dom-module id="query-list">
 	<template>
 		<style>
 			:host {
-				@apply(--layout-vertical);
-				@apply(--layout-center);
 				display: block;
 				position: relative;
 			}
@@ -37,17 +31,9 @@
 			}
 		</style>
 
-		<query-ajax
-			id="ajax" auto
-			query="[[query]]"
-			loading="{{loading}}"
-			data="{{data}}"
-			error="{{error}}">
-		</query-ajax>
-
-		<paper-spinner-lite active="[[loading]]" class="loading-spinner"></paper-spinner-lite>
 		<div id="main">
-			<div id="message">[[errorMessage]]</div>
+			<div id="errorMessage">[[error]]</div>
+			<div id="dataMessage">[[_computeDataString(data)]]</div>
 		</div>
 		
 	</template>
@@ -56,46 +42,20 @@
 			is: 'query-list',
 
 			properties: {
-				query: {
+				data: {
+					type: Object,
+					value: null,
+				},
+
+				error: {
 					type: String,
 					value: '',
 				},
-
-				limit: {
-					type: Number,
-					value: 0,
-				}
 			},
 
-			listeners: {
-				'ajax.data-changed': '_handleDataChanged',
-				'ajax.error-changed': '_handleErrorChanged',
+			_computeDataString: function(data) {
+				return JSON.stringify(data);
 			},
-
-			ready: function() {
-				this.errorMessage = '';
-			},
-
-			/**
-			 * Public functions
-			 */
-			makeQuery: function() {
-				this.$.ajax.makeQuery();
-			},
-
-			/**
-			 * Event handlers
-			 */
-			_handleDataChanged: function(e) {
-				var results = e.details.value;
-				if(results.success) {
-					this.errorMessage = JSON.stringify(results.data);
-				}
-				else {
-					this.errorMessage = reseults.error;
-				}
-			},
-
 		});
 	</script>
 </dom-module>
