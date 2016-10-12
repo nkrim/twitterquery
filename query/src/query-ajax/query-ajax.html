@@ -138,7 +138,7 @@
 
 			_handleAjaxError: function(e) {
 				var error = e.detail.value;
-				console.log(response);
+				console.log(error);
 				var data_cur = null;
 				if(error !== null && 'error' in error && 'code' in error) {
 					if(response.code == 4 && 'wait' in response) {
