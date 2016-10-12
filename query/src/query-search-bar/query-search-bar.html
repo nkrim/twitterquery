@@ -35,7 +35,7 @@ Example:
 				background-color: #fff;
 				border: none;
 				border-radius: 12px;
-				padding: 8px 40px;
+				padding: 8px 20px;
 
 				@apply(--query-search-bar-input);
 			}
@@ -64,7 +64,13 @@ Example:
 					type: String,
 					value: '',
 					notify: true,
-					observer: '_handleValueChanged',
+					readOnly: true,
+				},
+
+				bindValue: {
+					type: String,
+					value: '',
+					observer: '_handleBindValueChanged',
 				},
 			},
 
@@ -93,8 +99,9 @@ Example:
 			/**
 			 * Property change handlers
 			 */
-			_handleValueChanged: function(value) {
-				this.$.input.value = value;
+			_handleBindValueChanged: function(bindValue) {
+				this.$.input.value = bindValue;
+				this.value = bindValue;
 			},
 
 			/**
@@ -110,7 +117,7 @@ Example:
 			},
 
 			_handleInput: function() {
-				this.value = this.$.input.value;
+				this._setValue(this.$.input.value);
 			},
 		});
 	</script>

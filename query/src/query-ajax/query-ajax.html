@@ -71,8 +71,10 @@
 			 * Public functions
 			 */
 			makeQuery: function() {
-				if(this.query.trim().length == 0)
-					this._setData({'message': 'Please enter a search query.'});
+				if(this.query.trim().length == 0) {
+					this._setError(true);
+					this._setData({'error': 'Please enter a search query.'});
+				}
 				else
 					this.$.ajax.generateRequest();
 			},

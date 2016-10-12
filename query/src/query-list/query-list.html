@@ -2,6 +2,10 @@
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
 
+<link rel="import" href="../../bower_components/neon-animation/neon-animated-pages.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
+
 <dom-module id="query-list">
 	<template>
 		<style>
@@ -12,28 +16,31 @@
 
 			#main {
 				width: 100%;
-				height: 100px;
 				background-color: #fff;
 				border-radius: 10px;
+				overflow: hidden;
 				-webkit-transition: height 0.2s ease-in-out;
 				-moz-transition: height 0.2s ease-in-out;
 				-o-transition: height 0.2s ease-in-out;
 				transition: height 0.2s ease-in-out;
 			} 
 
-			.loading-spinner {
-				position: absolute;
-				top: -24px;
-				left: 0;
-				right: 0;
-				margin: auto;
-				--paper-spinner-color: var(--primary-color, #000);
+			#pages neon-animatable, # {
+				display: block;
+			}
+			.result-container {
+				display: block;
+				width: 100%;
+				word-wrap: break-word;
 			}
 		</style>
 
-		<div id="main">
-			<div id="errorMessage">[[error]]</div>
-			<div id="dataMessage">[[_computeDataString(data)]]</div>
+		<div id="main" style="height: [[_height]]px">
+			<neon-animated-pages id="pages" selected="[[_state]]" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+			    <neon-animatable><div id="emptyContainer" class="result-container"></div></neon-animatable>
+			    <neon-animatable><div id="dataContainer" class="result-container">[[_computeDataString(data)]]</div></neon-animatable>
+			    <neon-animatable><div id="errorContainer" class="result-container">[[error]]</div></neon-animatable>
+			</neon-animated-pages>
 		</div>
 		
 	</template>
@@ -44,16 +51,83 @@
 			properties: {
 				data: {
 					type: Object,
-					value: function() { return {}; },
+					value: null,
+					observer: '_dataChanged',
 				},
 
 				error: {
 					type: String,
 					value: '',
+					observer: '_errorChanged',
 				},
+
+				/**
+				 * Private properties
+				 */
+				_height: {
+					type: Number,
+					value: 0,
+				},
+
+				_state: {
+					type: Number,
+					value: 0, // 0=empty; 1=data; 2=error
+					readOnly: true,
+					observer: '_stateChanged',
+				}
+			},
+
+			/**
+			 * Public functions
+			 */
+			clear: function() {
+				this._set_state(0);
+			},
+
+			/**
+			 * Property observers
+			 */
+			_dataChanged: function(data) {
+				if(data === null) {
+					if(this._state === 1)
+						this._set_state(0);
+				}
+				else
+					this._set_state(1);
+			},
+
+			_errorChanged: function(error) {
+				if(error === '') {
+					if(this._state === 2)
+						this._set_state(0);
+				}
+				else
+					this._set_state(2);
+			},
+
+			_stateChanged: function(state) {
+				var container;
+				switch(state) {
+					case 0:
+						this._height = 0;
+						return;
+					case 1:
+						container = this.$.dataContainer;
+						break;
+					case 2:
+						container = this.$.errorContainer;
+						break;
+				}
+				container.style.visibility = 'hidden';
+				container.style.position = 'absolute';
+				this._height = container.offsetHeight;
+				container.style.position = '';
+				container.style.visibility = '';
 			},
 
 			_computeDataString: function(data) {
+				if(data === null)
+					return '';
 				return JSON.stringify(data);
 			},
 		});

@@ -71,6 +71,9 @@
         font-size: 96px;
         transform-origin: center top;
       }
+      #mainTitle {
+        cursor: pointer;
+      }
 
       #searchHeader {
         height: 320px;
@@ -116,7 +119,7 @@
           <div>Twitter Query</div>
         </app-toolbar>
         <app-toolbar main-title>
-          <div>Twitter Query</div>
+          <div id="mainTitle">Twitter Query</div>
         </app-toolbar>
       </app-header>
 
@@ -154,6 +157,7 @@
       },
 
       listeners: {
+        'mainTitle.tap': '_handleTitleTap',
         'search.search-enter': '_handleSearchEnter',
       }, 
 
@@ -168,6 +172,31 @@
         this.playAnimation('entry');
       },
 
+      scroll: function(top) {
+        var easeOut = function(t, cur, diff, dur) { // Ripped from Polymer's paper-scroll-header-panel `scroll` function
+          t /= dur;
+          return -diff * t*(t-2) + cur;
+        };
+        var left = window.pageXOffset;
+        var start = Date.now();
+        var cur = window.pageYOffset;
+        var diff = top - cur;
+        var dur = 250;
+        var t = 0;
+        var delay = 5;
+        var id = setInterval(move, delay);
+        function move() {
+          t += delay;
+          if(t > dur) {
+            window.scrollTo(left, top);
+            clearInterval(id);
+          }
+          else {
+            window.scrollTo(left, easeOut(t, cur, diff, dur));
+          }
+        }
+      },
+
       hide: function() {
         this.playAnimation('exit');
       },
@@ -175,8 +204,14 @@
       /**
        * Event handlers
        */
+      _handleTitleTap: function() {
+        this.scroll(0);
+      },
+
       _handleSearchEnter: function(e) {
         this.$.main.query = this.$.search.value; 
+        this.$.main.makeQuery();
+        this.scroll(192);
       },
 
     });

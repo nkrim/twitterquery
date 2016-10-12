@@ -11,9 +11,17 @@
 	<template>
 		<style>
 			:host {
-				@apply(--layout-vertical);
-				@apply(--layout-center);
 				display: block;
+				position: relative;
+			}
+
+			.loading-spinner {
+				position: absolute;
+				top: -48px;
+				left: 0;
+				right: 0;
+				margin: auto;
+				--paper-spinner-color: #fff;
 			}
 		</style>
 		
@@ -51,6 +59,7 @@
 			 * Public functions
 			 */
 			makeQuery: function() {
+				this.$.list.clear();
 				this.$.ajax.makeQuery();
 			},
 
@@ -61,13 +70,13 @@
 				var results = e.detail.value;
 				if(results === null)
 					return;
-				if(!this.$.list.error) {
+				if(!this.$.ajax.error) {
 					this.$.list.error = '';
 					this.$.list.data = results.data;
 					console.log(JSON.stringify(results.data));
 				}
 				else {
-					this.$.list.data = {};
+					this.$.list.data = null;
 					this.$.list.error = results.error;
 					console.log(results.error);
 				}
