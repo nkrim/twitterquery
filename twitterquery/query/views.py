@@ -155,7 +155,7 @@ def query(request):
 	# Construct and return JSON response from search object, if succesful
 	else:
 		serializer = SearchSerializer(search)
-		return makeJsonResponse({'success':True, 'result':serializer.data})
+		return makeJsonResponse({'success':True, 'data':serializer.data})
 
 def get(request, search_pk):
 	search = get_object_or_404(Search, pk=search_pk)

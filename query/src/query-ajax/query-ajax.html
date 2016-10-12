@@ -122,14 +122,17 @@
 				console.log(response);
 				var data_cur = null;
 				var success = false;
-				if('success' in response) {
-					if(response.success && 'result' in response) {
-						data_cur = {'data': response.results};
+				if('success' in response && response.success) {
+					if('data' in response) {
+						data_cur = {'data': response.data};
 						success = true;
 					}
 					else {
-						data_cur = {'error': 'Error recieved on succesful response: '+response.error};
+						data_cur = {'error': 'Error no data found on succesful response'};
 					}
+				}
+				else if('error' in response) {
+					data_cur = {'error': 'Error recieved on succesful response: '+response.error};
 				}
 				else {
 					data_cur = {'error': 'Unknown error in retrieving data on succesful response.'};
