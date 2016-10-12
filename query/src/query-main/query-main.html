@@ -58,7 +58,7 @@
 			 * Event handlers
 			 */
 			_handleDataChanged: function(e) {
-				var results = e.details.value;
+				var results = e.detail.value;
 				if(results.success) {
 					this.$.list.error = '';
 					this.$.list.data = results.data;
