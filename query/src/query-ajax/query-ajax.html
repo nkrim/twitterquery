@@ -60,6 +60,7 @@
 
 			listeners: {
 				'ajax.last-response-changed': '_handleAjaxResponse',
+				'ajax.last-error-changed': '_handleAjaxError',
 			},
 
 			created: function() {
@@ -118,28 +119,39 @@
 				var response = e.detail.value;
 				console.log(response);
 				var data_cur = null;
-				if(respone !== null && 'success' in response) {
+				var success = false;
+				if(response !== null && 'success' in response) {
 					if(response.success && 'results' in response) {
 						data_cur = {'data': response.results};
 						success = true;
 					}
-					else if ('error' in response && 'code' in response) {
-						if(response.code == 4 && 'wait' in response) {
-							data_cur = {'error': 'Server has recieved too many requests, try again in '+response.wait+' seconds.'};
-						}
-						else {
-							data_cur = {'error': response.error};
-						}
+					else {
+							data_cur = {'error': 'Error recieved on succesful response: '+response.error};
+					}
+				}
+				else {
+					data_cur = {'error': 'Unknown error in retrieving data on succesful response.'};
+				}
+				this._setError(!success);
+				this._setData(data_cur);
+			},
+
+			_handleAjaxError: function(e) {
+				var error = e.detail.value;
+				console.log(response);
+				var data_cur = null;
+				if(error !== null && 'error' in error && 'code' in error) {
+					if(response.code == 4 && 'wait' in response) {
+						data_cur = {'error': 'Server has recieved too many requests, try again in '+response.wait+' seconds.'};
 					}
 					else {
-						data_cur = {'error': 'Unknown error in retrieving data.'};
+						data_cur = {'error': response.error};
 					}
 				}
 				else {
 					data_cur = {'error': 'Unknown error in retrieving data.'};
 				}
-				data_cur.success = !('data' in data_cur);
-				this._setError(data_cur.success);
+				this._setError(true);
 				this._setData(data_cur);
 			},
 		});
