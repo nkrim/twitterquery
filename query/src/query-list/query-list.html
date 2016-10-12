@@ -28,13 +28,18 @@
 			} 
 
 			.loading-spinner {
+				position: absolute;
+				top: -24px;
+				left: 0;
+				right: 0;
+				margin: auto;
 				--paper-spinner-color: var(--primary-color, #000);
 			}
 		</style>
 
 		<query-ajax
-			id="ajax"
-			query="[[search]]"
+			id="ajax" auto
+			query="[[query]]"
 			loading="{{loading}}"
 			data="{{data}}"
 			error="{{error}}">
@@ -54,8 +59,12 @@
 				query: {
 					type: String,
 					value: '',
-					observers: '_'
 				},
+
+				limit: {
+					type: Number,
+					value: 0,
+				}
 			},
 
 			listeners: {
@@ -65,6 +74,13 @@
 
 			ready: function() {
 				this.errorMessage = '';
+			},
+
+			/**
+			 * Public functions
+			 */
+			makeQuery: function() {
+				this.$.ajax.makeQuery();
 			},
 
 			/**

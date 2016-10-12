@@ -6,7 +6,7 @@
 	<template>
 		<iron-ajax
 			id="ajax"
-			url="/query"
+			url="http://hub.sammusicbiz.com/query"
 			params="[[_computeParams(query,limit)]]"
 			handle-as="json"
 			loading="{{loading}}"
@@ -47,20 +47,40 @@
 					value: false,
 					notifies: true,
 				},
+
+				auto: {
+					type: Boolean,
+					value: false,
+				},
 			},
+
+			observers: [
+				'_observeAutoQuery(query,limit)'
+			],
 
 			listeners: {
 				'ajax.last-response-changed': '_handleAjaxResponse',
+			},
+
+			created: function() {
+				this.autoReady = false;
 			},
 
 			/**
 			 * Public functions
 			 */
 			makeQuery: function() {
-				if(query.trim().length == 0)
+				if(this.query.trim().length == 0)
 					this._setData({'message': 'Please enter a search query.'});
 				else
 					this.$.ajax.generateRequest();
+			},
+
+			/**
+			 * Private functions
+			 */
+			_canQuery: function() {
+				return query.trim().length > 0;
 			},
 
 			/**
@@ -69,8 +89,8 @@
 			_computeParams: function(query, limit) {
 				var params = {};
 
-				if(query !== null && query !== '')
-					params['q'] = query;
+				if(query !== null && query.trim().length > 0)
+					params['q'] = query.trim();
 				
 				if(limit > 0)
 					params['limit'] = limit;
@@ -79,12 +99,26 @@
 			},
 
 			/**
+			 * Observer handlers
+			 */
+			_observeAutoQuery: function(query, limit) {
+				if(!this.autoReady) {
+					this.autoReady = true;
+					return;
+				}
+				if(this.auto) {
+					this.makeQuery();
+				}
+			},
+
+			/**
 			 * Event handlers
 			 */
 			_handleAjaxResponse: function(e) {
 				var response = e.detail.value;
+				console.log(response);
 				var data_cur = null;
-				if('success' in response) {
+				if(respone !== null && 'success' in response) {
 					if(response.success && 'results' in response) {
 						data_cur = {'data': response.results};
 						success = true;
