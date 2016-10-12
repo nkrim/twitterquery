@@ -59,6 +59,8 @@
 			 */
 			_handleDataChanged: function(e) {
 				var results = e.detail.value;
+				if(results === null)
+					return;
 				if(results.success) {
 					this.$.list.error = '';
 					this.$.list.data = results.data;
