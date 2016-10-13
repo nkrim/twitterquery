@@ -5,9 +5,15 @@
 <link rel="import" href="../../bower_components/app-layout/app-scroll-effects/effects/resize-title.html">
 <link rel="import" href="../../bower_components/app-layout/app-scroll-effects/effects/blend-background.html">
 <link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../bower_components/app-route/app-location.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-input/iron-input.html">
 
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 
 <link rel="import" href="../../bower_components/neon-animation/neon-animatable.html">
@@ -24,17 +30,25 @@
       :root {
         @apply(--paper-font-common-base);
         --primary-color: #55acee;
+        --accent1-color: #ff8250;
+        --accent2-color: #ffd350;
       }
 
       :host {
         display: block;
       }
 
+      input {
+        border: none;
+      }
+      input:focus {
+        outline: none;
+      }
+
       app-header-layout {
         @apply(--layout-vertical);
         @apply(--layout-center);
         width: 100%;
-        height: 3000px;
         margin-left: auto;
         margin-right: auto;
         padding-top: 72px;
@@ -81,24 +95,99 @@
           background: rgba(0,0,0,0.2);
         }
       }
+      #searchHeader:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: var(--primary-color, #55acee);
+      }
       .search-toolbar {
         @apply(--layout-horizontal);
         @apply(--layout-center-justified);
         @apply(--layout-end);
         height: 128px;
+        width: 1040px;
         position: absolute;
         left: 0;
         right: 0;
         bottom: 0;
+        padding: 8px 0;
+        margin: auto;
       }
       .search-container {
-        @apply(--layout-vertical);
-        @apply(--layout-center-justified);
-        height: 64px;
-        width: 1024px;
+        @apply(--layout-flex);
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        height: 32px;
+        color: rgba(0,0,0,0.75);
+        background-color: #fff;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        padding: 8px 0;
       }
-      #search {
-        
+      #searchButton {
+        height: 48px;
+        background: var(--accent1-color, #fff);
+        margin: 0;
+        --paper-button: {
+          min-width: initial;
+          width: 48px;
+          padding: 8px 8px;
+          border-radius: 0;
+          border-top-right-radius: 8px;
+          border-bottom-right-radius: 8px;
+        }
+      }
+      #searchBar {
+        @apply(--layout-flex);
+        width: 100%;
+        padding: 0 16px;
+      }
+
+      #downloadLink {
+        opacity: 1;
+        visibility: visible;
+        text-decoration: none;
+        color: rgba(0,0,0,0.9);
+        -webkit-transition: opacity 0.2s linear, visibility 0s linear 0s;
+        -moz-transition: opacity 0.2s linear, visibility 0s linear 0s;
+        -o-transition: opacity 0.2s linear, visibility 0s linear 0s;
+        transition: opacity 0.2s linear, visibility 0s linear 0s;
+      }
+      #downloadLink[hide] {
+        opacity: 0;
+        visibility: hidden;
+        -webkit-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
+        -moz-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
+        -o-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
+        transition: opacity 0.2s linear, visibility 0s linear 0.2s;
+      }
+      #download {
+        height: 48px;
+        background: var(--accent2-color, #fff);
+        --paper-button: {
+          min-width: initial;
+          width: 88px;
+          padding: 8px 8px;
+          margin: 0 8px;
+        }
+      }
+
+      .search-tool-container {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        @apply(--layout-end-justified);
+        width: 88px;
+        height: 48px;
+        margin: 0 8px;
+      }
+      #settings {
+        color: #fff;
+        width: 48px;
+        height: 48px;
       }
 
       .main-container {
@@ -106,25 +195,41 @@
       }
     </style>
 
+    <app-location id="location"></app-location>
+
     <app-header-layout>
       <app-header id="searchHeader" condenses fixed effects="blend-background">
+
         <app-toolbar class="search-toolbar">
+          <a id="downloadLink" hide$="[[!success]]" href="[[_computeDownloadLink(searchId)]]"><paper-button id="download">
+            <iron-icon icon="file-download"></iron-icon>
+            <span>zip</span>
+          </paper-button></a>
           <div class="search-container">
-            <query-search-bar id="search" placeholder="Enter your search query here..."></query-search-bar>
+            <query-search-bar id="searchBar" placeholder="Enter your query here"></query-search-bar>
           </div>
+          <paper-button id="searchButton"><iron-icon icon="search"></iron-icon></iron-icon></paper-button>
+          <paper-icon-button id="settings" icon="settings"></paper-icon-button>
         </app-toolbar>
+
       </app-header>
+
+
       <app-header id="mainHeader" condenses fixed effects="resize-title blend-background">
+
         <app-toolbar sticky top-item condensed-title>
           <div>Twitter Query</div>
         </app-toolbar>
+
         <app-toolbar main-title>
           <div id="mainTitle">Twitter Query</div>
         </app-toolbar>
+
       </app-header>
 
+
       <div class="main-container">
-        <query-main id="main"></query-main>
+        <query-main id="main" success="{{success}}" search-id="{{searchId}}"></query-main>
       </div>
     </app-header-layout>
 
@@ -149,7 +254,10 @@
               },
               'exit': {
                 name: 'fade-out-animation',
-                node: this
+                node: this,
+                timing: {
+                  duration: 1000
+                }
               }
             }
           },
@@ -158,8 +266,24 @@
 
       listeners: {
         'mainTitle.tap': '_handleTitleTap',
-        'search.search-enter': '_handleSearchEnter',
+        'searchBar.search-enter': '_handleSearchEnter',
+        'searchButton.tap': '_handleSearchButton',
       }, 
+
+      ready: function() {
+        var params = this.$.location.queryParams || {};
+        if('limit' in params) {
+          var limit = parseInt(params.limit);
+          if(limit !== null) {
+            this.$.main.limit = limit;
+          }
+        }
+        if('q' in params) {
+          var query = decodeURIComponent(params.q);
+          this.$.searchBar.bindValue = query;
+          this.search(query);
+        }
+      },
 
       attached: function() {
         this.show();
@@ -170,6 +294,20 @@
        */
       show: function() {
         this.playAnimation('entry');
+      },
+
+      hide: function() {
+        this.playAnimation('exit');
+      },
+
+      search: function(query) {
+        this.$.main.query = query;
+        this.scrollToTop();
+        this.$.main.makeQuery();
+      },
+
+      scrollToTop: function() {
+        this.scroll(0);
       },
 
       scroll: function(top) {
@@ -197,8 +335,13 @@
         }
       },
 
-      hide: function() {
-        this.playAnimation('exit');
+      /**
+       * Compute functions
+       */
+      _computeDownloadLink: function(searchId) {
+        if(searchId !== '')
+          return 'http://hub.sammusicbiz.com/query/'+searchId+'/download';
+        return '';
       },
 
       /**
@@ -209,11 +352,12 @@
       },
 
       _handleSearchEnter: function(e) {
-        this.$.main.query = this.$.search.value; 
-        this.$.main.makeQuery();
-        this.scroll(192);
+        this.search(e.detail.value);
       },
 
+      _handleSearchButton: function(e) {
+        this.search(this.$.searchBar.value);
+      }
     });
   </script>
 </dom-module>

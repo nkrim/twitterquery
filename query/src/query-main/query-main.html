@@ -48,7 +48,21 @@
 				limit: {
 					type: Number,
 					value: 0,
-				}
+				},
+
+				success: {
+					type: Boolean,
+					value: false,
+					notify: true,
+					readOnly: true,
+				},
+
+				searchId: {
+					type: String,
+					value: '',
+					notify: true,
+					readOnly: true,
+				},
 			},
 
 			listeners: {
@@ -73,11 +87,14 @@
 				if(!this.$.ajax.error) {
 					this.$.list.error = '';
 					this.$.list.data = results.data;
-					console.log(JSON.stringify(results.data));
+					this._setSuccess(true);
+					this._setSearchId(results.data.id);
 				}
 				else {
 					this.$.list.data = null;
 					this.$.list.error = results.error;
+					this._setSuccess(false);
+					this._setSearchId('');
 					console.log(results.error);
 				}
 			},

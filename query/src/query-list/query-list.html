@@ -2,6 +2,8 @@
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
 
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
 <link rel="import" href="../../bower_components/neon-animation/neon-animated-pages.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
@@ -32,6 +34,15 @@
 				display: block;
 				width: 100%;
 				word-wrap: break-word;
+				padding: 24px;
+			}
+
+			#dataContainer {
+				@apply(--paper-font-headline);
+			}
+
+			#errorContainer {
+				@apply(--paper-font-headline);
 			}
 		</style>
 
@@ -39,7 +50,7 @@
 			<neon-animated-pages id="pages" selected="[[_state]]" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
 			    <neon-animatable><div id="emptyContainer" class="result-container"></div></neon-animatable>
 			    <neon-animatable><div id="dataContainer" class="result-container">[[_computeDataString(data)]]</div></neon-animatable>
-			    <neon-animatable><div id="errorContainer" class="result-container">[[error]]</div></neon-animatable>
+			    <neon-animatable><div id="errorContainer" class="result-container"><b>Error:</b> [[error]]</div></neon-animatable>
 			</neon-animated-pages>
 		</div>
 		
@@ -120,9 +131,10 @@
 				}
 				container.style.visibility = 'hidden';
 				container.style.position = 'absolute';
-				this._height = container.offsetHeight;
+				this._height = 1000;//container.offsetHeight;
 				container.style.position = '';
 				container.style.visibility = '';
+				Polymer.dom(document.body).querySelector('#app').scroll(192);
 			},
 
 			_computeDataString: function(data) {

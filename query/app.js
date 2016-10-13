@@ -29,7 +29,7 @@ function finishLazyLoading() {
     // App is visible and ready to load some data!
   };
 
-  var link = document.querySelector('#app');
+  var link = document.querySelector('#appImport');
 
   // 5. Go if the async Import loaded quickly. Otherwise wait for it.
   // crbug.com/504944 - readyState never goes to complete until Chrome 46.

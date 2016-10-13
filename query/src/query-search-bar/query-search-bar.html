@@ -25,29 +25,54 @@ Example:
 		<style>
 			:host {
 				display: block;
+				position: relative;
 			}
+			:host(:not([empty])) #placeholder {
+				visibility: hidden;
+			} 
 
 			#input {
 				@apply(--paper-font-headline);
 
 				width: 100%;
-				color: rgba(0,0,0,0.75);
-				background-color: #fff;
 				border: none;
-				border-radius: 12px;
-				padding: 8px 20px;
 
 				@apply(--query-search-bar-input);
 			}
 			#input:focus {
 				outline: none;
 			}
-			#input.empty:not(:focus) {
-				text-align: center;
+
+			#placeholderContainer {
+				@apply(--layout-vertical);
+				@apply(--layout-center-justified);
+				@apply(--layout-center);
+				pointer-events: none;
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+			}
+			#placeholder {
+				@apply(--paper-font-headline);
+				color: rgba(0,0,0,0.35);
+				position: relative;
+				left: 0;
+				-webkit-transition: left 0.4s ease-in-out;
+				-moz-transition: left 0.4s ease-in-out;
+				-o-transition: left 0.4s ease-in-out;
+				transition: left 0.4s ease-in-out;
+			}
+			#placeholder.start-align {
+				@apply(--layout-self-start);
 			}
 		</style>
 		
-		<input id="input" class$="[[_computeInputClass(value)]]" type="search" placeholder="[[placeholder]]">
+		<div id="placeholderContainer">
+			<span id="placeholder">[[placeholder]]</span>
+		</div>
+		<input id="input" type="search">
 
 	</template>
 	<script>
@@ -72,28 +97,41 @@ Example:
 					value: '',
 					observer: '_handleBindValueChanged',
 				},
+
+				empty: {
+					type: Boolean,
+					value: false,
+					readOnly: true,
+					computed: '_computeEmpty(value)',
+					reflectToAttribute: true,
+				},
 			},
 
 			listeners: {
 				'input.input': '_handleInput',
 				'input.keyup': '_handleKeyUp',
+				'input.focus': '_handleFocus',
+				'input.blur': '_handleBlur',
 			},	
+
+			attached: function() {
+				var pad = this.$.input.offsetLeft;
+				this.$.placeholderContainer.style.left = pad+'px';
+				this.$.placeholderContainer.style.right = pad+'px';
+			},
 
 			/**
 			 * Private functions
 			 */
 			_fireSearchEnter: function() {
-				this.fire('search-enter');
+				this.fire('search-enter', {'value': this.value});
 			},
 
 			/**
 			 * Compute functions
 			 */
-			_computeInputClass: function(value) {
-				if(value === '')
-					return 'empty'
-				else
-					return '';
+			_computeEmpty: function(value) {
+				return value === '';
 			},
 
 			/**
@@ -118,6 +156,15 @@ Example:
 
 			_handleInput: function() {
 				this._setValue(this.$.input.value);
+			},
+
+			_handleFocus: function() {
+				var delta = (this.$.placeholder.offsetWidth - this.$.input.offsetWidth )/2;
+				this.$.placeholder.style.left = delta+'px';
+			},
+
+			_handleBlur: function() {
+				this.$.placeholder.style.left = '';
 			},
 		});
 	</script>
