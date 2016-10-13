@@ -201,7 +201,7 @@
       <app-header id="searchHeader" condenses fixed effects="blend-background">
 
         <app-toolbar class="search-toolbar">
-          <a download id="downloadLink" hide$="[[!success]]" href="[[_computeDownloadLink(searchId)]]"><paper-button id="download">
+          <a download target="_blank" id="downloadLink" hide$="[[!success]]" href="[[_computeDownloadLink(searchId)]]"><paper-button id="download">
             <iron-icon icon="file-download"></iron-icon>
             <span>zip</span>
           </paper-button></a>
