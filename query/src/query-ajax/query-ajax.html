@@ -71,7 +71,7 @@
 			 * Public functions
 			 */
 			makeQuery: function() {
-				if(this.query.trim().length == 0) {
+				if(this.query.length === '') {
 					this._setError(true);
 					this._setData({'error': 'Please enter a search query.'});
 				}
@@ -83,7 +83,7 @@
 			 * Private functions
 			 */
 			_canQuery: function() {
-				return query.trim().length > 0;
+				return query.length > 0;
 			},
 
 			/**
@@ -92,8 +92,8 @@
 			_computeParams: function(query, limit) {
 				var params = {};
 
-				if(query !== null && query.trim().length > 0)
-					params['q'] = query.trim();
+				if(query !== null && query.length !== '')
+					params['q'] = query;
 				
 				if(limit > 0)
 					params['limit'] = limit;

@@ -268,10 +268,15 @@
       listeners: {
         'mainTitle.tap': '_handleTitleTap',
         'searchBar.search-enter': '_handleSearchEnter',
+        'searchBar.search-button-down': '_handleSearchButonDown',
+        'searchBar.search-button-up': '_handleSearchButonUp',
         'searchButton.tap': '_handleSearchButton',
       }, 
 
       ready: function() {
+        // Set defaults
+        this.scrollId = null;
+        // Perform initial search based on url params
         var params = this.$.location.queryParams || {};
         if('limit' in params) {
           var limit = parseInt(params.limit);
@@ -312,6 +317,8 @@
       },
 
       scroll: function(top) {
+        if(this.scrollId !== null)
+          clearInterval(this.scrollId);
         var easeOut = function(t, cur, diff, dur) { // Ripped from Polymer's paper-scroll-header-panel `scroll` function
           t /= dur;
           return -diff * t*(t-2) + cur;
@@ -320,20 +327,32 @@
         var start = Date.now();
         var cur = window.pageYOffset;
         var diff = top - cur;
-        var dur = 250;
+        var dur = 500;
         var t = 0;
         var delay = 5;
-        var id = setInterval(move, delay);
+        this.scrollId = setInterval(move, delay);
         function move() {
           t += delay;
           if(t > dur) {
             window.scrollTo(left, top);
-            clearInterval(id);
+            clearInterval(this.scrollId);
           }
           else {
             window.scrollTo(left, easeOut(t, cur, diff, dur));
           }
         }
+      },
+
+      /**
+       * Private functions
+       */
+      _setLocationParams: function(query, limit) {
+        var params = {};
+        if(query !== '')
+          params['q'] = query;
+        if(limit > 0)
+          params['limit'] = limit;
+        this.$.location.queryParams = params;
       },
 
       /**
@@ -354,10 +373,24 @@
 
       _handleSearchEnter: function(e) {
         this.search(e.detail.value);
+        // Set app-location queryParams
+        var main = this.$.main;
+        this._setLocationParams(main.query, main.limit);
+      },
+
+      _handleSearchButonDown: function(e) {
+        this.$.searchButton.getRipple().downAction();
+      },
+
+      _handleSearchButonUp: function(e) {
+        this.$.searchButton.getRipple().upAction();
       },
 
       _handleSearchButton: function(e) {
         this.search(this.$.searchBar.value);
+        // Set app-location queryParams
+        var main = this.$.main;
+        this._setLocationParams(main.query, main.limit);
       }
     });
   </script>

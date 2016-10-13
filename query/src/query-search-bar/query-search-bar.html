@@ -110,9 +110,14 @@ Example:
 			listeners: {
 				'input.input': '_handleInput',
 				'input.keyup': '_handleKeyUp',
+				'input.keydown': '_handleKeyDown',
 				'input.focus': '_handleFocus',
 				'input.blur': '_handleBlur',
 			},	
+
+			ready: function() {
+				this.enterDown = false;
+			},
 
 			attached: function() {
 				var pad = this.$.input.offsetLeft;
@@ -125,6 +130,16 @@ Example:
 			 */
 			_fireSearchEnter: function() {
 				this.fire('search-enter', {'value': this.value});
+			},
+			_fireSearchButtonDown: function() {
+				if(!this.enterDown) {
+					this.enterDown = true;
+					this.fire('search-button-down');
+				}
+			},
+			_fireSearchButtonUp: function() {
+				this.enterDown = false;
+				this.fire('search-button-up');
 			},
 
 			/**
@@ -139,23 +154,32 @@ Example:
 			 */
 			_handleBindValueChanged: function(bindValue) {
 				this.$.input.value = bindValue;
-				this.value = bindValue;
+				this._handleInput();
 			},
 
 			/**
 			 * Event handlers
 			 */
+			_handleInput: function() {
+				this._setValue(this.$.input.value.trim());
+			},
+
 			_handleKeyUp: function(e) {
 				if(!e)
 					e = window.event;
 				var keyCode = e.keyCode || e.which;
 				if(keyCode == '13') {
 					this._fireSearchEnter();
+					this._fireSearchButtonUp();
 				}
 			},
-
-			_handleInput: function() {
-				this._setValue(this.$.input.value);
+			_handleKeyDown: function(e) {
+				if(!e)
+					e = window.event;
+				var keyCode = e.keyCode || e.which;
+				if(keyCode == '13') {
+					this._fireSearchButtonDown();
+				}
 			},
 
 			_handleFocus: function() {
@@ -165,6 +189,7 @@ Example:
 
 			_handleBlur: function() {
 				this.$.placeholder.style.left = '';
+				this._fireSearchButtonUp();
 			},
 		});
 	</script>
