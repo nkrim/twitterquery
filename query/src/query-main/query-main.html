@@ -86,13 +86,15 @@
 					return;
 				if(!this.$.ajax.error) {
 					this.$.list.error = '';
-					this.$.list.data = results.data;
+					this.$.list.message = results.message || '';
+					this.$.list.data = results.data || {};
 					this._setSuccess(true);
 					this._setSearchId(results.data.id);
 				}
 				else {
 					this.$.list.data = null;
-					this.$.list.error = results.error;
+					this.$.list.message = '';
+					this.$.list.error = results.error || 'Error';
 					this._setSuccess(false);
 					this._setSearchId('');
 					console.log(results.error);

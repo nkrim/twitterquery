@@ -71,9 +71,9 @@
 			 * Public functions
 			 */
 			makeQuery: function() {
-				if(this.query.length === '') {
-					this._setError(true);
-					this._setData({'error': 'Please enter a search query.'});
+				if(this.query === '') {
+					this._setError(false);
+					this._setData({'message': 'Please enter a search query.'});
 				}
 				else
 					this.$.ajax.generateRequest();
@@ -125,12 +125,15 @@
 				var data_cur = null;
 				var success = false;
 				if('success' in response && response.success) {
-					if('data' in response) {
-						data_cur = {'data': response.data};
+					if('data' in response && 'statuses' in response.data) {
 						success = true;
+						data_cur = {'data': response.data};
+						if(response.data.statuses.length === 0) {
+							data_cur['message'] = 'No statuses satisfy the search';
+						}
 					}
 					else {
-						data_cur = {'error': 'Error no data found on succesful response'};
+						data_cur = {'error': 'No data found on succesful response'};
 					}
 				}
 				else if('error' in response) {
@@ -144,17 +147,23 @@
 			},
 
 			_handleAjaxError: function(e) {
-				var error = e.detail.value;
-				if(error === null)
+				var response = e.detail.value;
+				if(response === null)
 					return;
-				console.log(error);
-				var data_cur = null;
-				if('error' in error && 'code' in error) {
-					if(response.code == 4 && 'wait' in response) {
-						data_cur = {'error': 'Server has recieved too many requests, try again in '+response.wait+' seconds.'};
+				if('response' in response) {
+					var error = response.response;
+					console.log(error);
+					var data_cur = null;
+					if(error !== null && 'error' in error && 'code' in error) {
+						if(error.code == 4 && 'wait' in response) {
+							data_cur = {'error': 'Server has recieved too many requests, try again in '+error.wait+' seconds.'};
+						}
+						else {
+							data_cur = {'error': error.error};
+						}
 					}
 					else {
-						data_cur = {'error': response.error};
+						data_cur = {'error': 'Unknown error in retrieving data.'};
 					}
 				}
 				else {

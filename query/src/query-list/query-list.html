@@ -34,7 +34,6 @@
 			}
 			.result-container {
 				display: block;
-				width: 100%;
 				word-wrap: break-word;
 				box-sizing: border-box;
 			}
@@ -44,6 +43,10 @@
 			}
 			#dataContainer query-block:not(:last-of-type) {
 				border-bottom: solid 1px rgba(0,0,0,0.3);
+			}
+
+			#messageContainer:not([empty]) {
+				padding: 24px;
 			}
 
 			#errorContainer {
@@ -58,6 +61,7 @@
 			    </neon-animatable>
 			    <neon-animatable>
 			    	<div id="dataContainer" class="result-container">
+			    		<div id="messageContainer" empty$="[[_isEmptyString(message)]]">[[message]]</div>
 			    		<template id="list" is="dom-repeat" items="[[_computeStatuses(data)]]">
 			    			<query-block status="[[item]]"></query-block>
 			    		</template>
@@ -79,6 +83,11 @@
 					type: Object,
 					value: null,
 					observer: '_dataChanged',
+				},
+
+				message: {
+					type: String,
+					value: '',
 				},
 
 				error: {
@@ -107,6 +116,7 @@
 			 * Public functions
 			 */
 			clear: function() {
+				this._set_state(0);
 				this.data = null;
 				this.error = '';
 			},
@@ -121,6 +131,10 @@
 				container.style.position = '';
 				container.style.visibility = '';
 				Polymer.dom(document.body).querySelector('#app').scroll(192);
+			},
+
+			_isEmptyString: function(str) {
+				return str === '';
 			},
 
 			/**
@@ -158,6 +172,12 @@
 						this._setHeight(this.$.errorContainer);
 						break;
 				}
+			},
+
+			_computeMessage: function(data) {
+				if(data !== null && 'message' in data)
+					return data.message;
+				return '';
 			},
 
 			_computeStatuses: function(data) {

@@ -2,6 +2,9 @@
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
 
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
 <dom-module id="query-block">
 	<template>
 		<style>
@@ -15,14 +18,31 @@
 				background: rgba(0,0,0,0.1);
 			}
 
+			.block-header {
+				@apply(--layout-horizontal);
+				@apply(--layout-justified);
+				@apply(--layout-center);
+				height: 64px;
+				padding: 4px;
+			}
+
 			.user-link {
 				@apply(--layout-horizontal);
+				@apply(--layout-center);
 				text-decoration: none;
 				color: #000;
 			}
 			.user-link[href]:hover #name, .user-link[href]:focus #name {
 				text-decoration: underline;
-				color: var(--accent2-color, #000);
+				color: var(--accent1-color, #000);
+			}
+			.user-link > div {
+				@apply(--layout-vertical);
+				@apply(--layout-center-justified);
+				padding: 4px;
+			}
+			.user-link span {
+
 			}
 
 			.profile-image {
@@ -31,24 +51,67 @@
 				border-radius: 28px;
 			}
 
-			.user-info {
-				@apply(--layout-vertical);
+			.name-container span {
+				height: 28px;
+			}
+
+			#name {
+				@apply(--paper-font-headline);
+				font-weight: 500;
+			}
+
+			#screenName {
+				@apply(--paper-font-subhead);
+				color: rgba(0,0,0,0.7);
+			}
+
+			.info-container {
+				@apply(--paper-font-subhead);
+				color: rgba(0,0,0,0.7);
+			}
+			.info-container span {
+				padding: 0 4px;
+			}
+
+			.status-link-container {
+				@apply(--layout-flex);
+				@apply(--layout-end);
+			}
+
+			.button-container a {
+				font-size: 18px;
+				text-decoration: none;
+				color: #fff;
+			}
+			#goToStatus {
+				background: var(--primary-color, blue);
+				--paper-button: {
+					padding: 8px;
+					height: 48px;
+				}
 			}
 		</style>
 		
-		<div>
-			<a class="user-link" href$="[[_computeUserLink(user)]]">
+		<div class="block-header">
+			<a class="user-link" target="_blank" href$="[[_computeUserLink(user)]]">
 				<img class="profile-image" src$="[[_computeUserProfileImage(user)]]"/>			
-				<div class="user-info">
-					
+				<div class="name-container">
+					<span id="name">[[_computeUserName(user)]]</span>
+					<span id="screenName">[[_computeUserScreenName(user)]]</span>
+				</div>
+				<div class="info-container">
+					<span>[[_computeUserLocation(user)]]</span>
+					<span>[[_computeUserFollowers(user)]]</span>
 				</div>
 			</a>
-			<div class="status-link-container">
-				
+			<div class="button-container">
+				<a target="_blank" href$="[[_computeStatusLink(user,status)]]" tabindex="-1">
+					<paper-button id="goToStatus">Go to Status</paper-button>
+				</a>
 			</div>
 		</div>
-		<div">
-			blah blah blah
+		<div>
+			<p class="text">[[_computeText(status)]]</p>
 		</div>
 		<div>
 			prettttty pictures
@@ -101,6 +164,44 @@
 
 			_computeUserProfileImage: function(user) {
 				return user.profile_image_url || '';
+			},
+
+			_computeUserName: function(user) {
+				return user.name || '';
+			},
+
+			_computeUserScreenName: function(user) {
+				if('screen_name' in user) 
+					return '@'+user.screen_name;
+				return '';
+			},
+
+			_computeUserLocation: function(user) {
+				return user.location || '';
+			},
+
+			_computeUserFollowers: function(user) {
+				if('followers_count' in user) {
+					var followers = user.followers_count;
+					var ret = followers+' follower';
+					if(followers !== 1)
+						ret += 's';
+					return ret;
+				}
+				return '';
+			},
+
+			_computeStatusLink: function(user, status) {
+				if('status_id' in status) {
+					var userLink = this._computeUserLink(user);
+					if(userLink !== '')
+						return userLink+'/status/'+status.status_id;
+				}
+				return '';
+			},
+
+			_computeText: function(status) {
+				return status.text || '';
 			},
 		});
 	</script>

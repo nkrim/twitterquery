@@ -32,6 +32,7 @@
         --primary-color: #55acee;
         --accent1-color: #ff8250;
         --accent2-color: #ffd350;
+        --content-width: 768px;
       }
 
       :host {
@@ -109,7 +110,7 @@
         @apply(--layout-center-justified);
         @apply(--layout-end);
         height: 128px;
-        width: 1040px;
+        width: calc(var(--content-width, 1024px) + 16px);
         position: absolute;
         left: 0;
         right: 0;
@@ -192,7 +193,7 @@
       }
 
       .main-container {
-        width: 1024px;
+        width: var(--content-width, 1024px);
       }
     </style>
 
@@ -317,12 +318,24 @@
       },
 
       scroll: function(top) {
-        if(this.scrollId !== null)
+        if(this.scrollId !== null) {
           clearInterval(this.scrollId);
+        }
         var easeOut = function(t, cur, diff, dur) { // Ripped from Polymer's paper-scroll-header-panel `scroll` function
           t /= dur;
           return -diff * t*(t-2) + cur;
         };
+        var move = function() {
+          console.log(this.scrollId);
+          t = Date.now() - start;
+          if(t > dur) {
+            window.scrollTo(left, top);
+            clearInterval(this.scrollId);
+          }
+          else {
+            window.scrollTo(left, easeOut(t, cur, diff, dur));
+          }
+        }.bind(this);
         var left = window.pageXOffset;
         var start = Date.now();
         var cur = window.pageYOffset;
@@ -331,16 +344,6 @@
         var t = 0;
         var delay = 5;
         this.scrollId = setInterval(move, delay);
-        function move() {
-          t += delay;
-          if(t > dur) {
-            window.scrollTo(left, top);
-            clearInterval(this.scrollId);
-          }
-          else {
-            window.scrollTo(left, easeOut(t, cur, diff, dur));
-          }
-        }
       },
 
       /**
