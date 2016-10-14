@@ -1,17 +1,107 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
 <dom-module id="query-block">
 	<template>
 		<style>
 			:host {
+				@apply(--layout-horizontal);
 				display: block;
+				overflow: hidden;
+				padding: 24px;
+			}
+			:host(:hover) {
+				background: rgba(0,0,0,0.1);
+			}
+
+			.user-link {
+				@apply(--layout-horizontal);
+				text-decoration: none;
+				color: #000;
+			}
+			.user-link[href]:hover #name, .user-link[href]:focus #name {
+				text-decoration: underline;
+				color: var(--accent2-color, #000);
+			}
+
+			.profile-image {
+				height: 56px;
+				width: 56px;
+				border-radius: 28px;
+			}
+
+			.user-info {
+				@apply(--layout-vertical);
 			}
 		</style>
 		
+		<div>
+			<a class="user-link" href$="[[_computeUserLink(user)]]">
+				<img class="profile-image" src$="[[_computeUserProfileImage(user)]]"/>			
+				<div class="user-info">
+					
+				</div>
+			</a>
+			<div class="status-link-container">
+				
+			</div>
+		</div>
+		<div">
+			blah blah blah
+		</div>
+		<div>
+			prettttty pictures
+		</div>
+
 	</template>
 	<script>
 		Polymer({ 
-			is: 'query-block'
+			is: 'query-block',
+
+			properties: {
+				status: {
+					type: Object,
+					value: function() {
+						return {};
+					},
+				},
+
+				user: {
+					type: Object,
+					value: '',
+					readOnly: true,
+					computed: '_computeUser(status)',
+				},
+
+				photos: {
+					type: Array,
+					value: function() { return []; },
+					readOnly: true,
+					computed: '_computePhotos(status)'
+				},
+			},
+
+			/**
+			 * Compute functions
+			 */
+			_computeUser: function(status) {
+				return status.created_by || {};
+			},
+
+			_computePhotos: function(status) {
+				return status.photos || [];
+			},
+
+			_computeUserLink: function(user) {
+				if('screen_name' in user)
+					return 'https://twitter.com/'+user.screen_name;
+				return '';
+			},
+
+			_computeUserProfileImage: function(user) {
+				return user.profile_image_url || '';
+			},
 		});
 	</script>
 </dom-module>

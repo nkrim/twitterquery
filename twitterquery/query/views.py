@@ -59,7 +59,7 @@ def query(request):
 	def get_search_results(bearer, search):
 		query = urlencode([
 			('q',search.query),
-			('result_tupe','recent'),
+			('result_type','recent'),
 			('count',str(search.limit))
 		])
 		url = 'https://api.twitter.com/1.1/search/tweets.json?'+query

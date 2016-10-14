@@ -1,27 +1,27 @@
 from rest_framework import serializers
 from .models import *
 
-class SearchSerializer(serializers.ModelSerializer):
+class PhotoSerializer(serializers.ModelSerializer):
 	class Meta:
-		model = Search
+		model = Photo
 		fields = '__all__'
-		depth = 2
 
 class TwitterUserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = TwitterUser
 		fields = '__all__'
-		read_only_fields = ('user_id',)
 
 class StatusSerializer(serializers.ModelSerializer):
+	photos = PhotoSerializer(many=True)
+	created_by = TwitterUserSerializer()
+
 	class Meta:
 		model = Status
-		fields = '__all__'
-		read_only_fields = ('status_id',)
-		depth = 1
+		exclude = ('created_by',)
 
-class PhotoSerializer(serializers.ModelSerializer):
+class SearchSerializer(serializers.ModelSerializer):
+	statuses = StatusSerializer(many=True)
+
 	class Meta:
-		model = Photo
-		fields = '__all__'
-		read_only_fields = ('photo_id',)
+		model = Search
+		exclude = ('statuses',)

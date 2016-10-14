@@ -8,6 +8,8 @@
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
 
+<link rel="import" href="../query-block/query-block.html">
+
 <dom-module id="query-list">
 	<template>
 		<style>
@@ -27,18 +29,21 @@
 				transition: height 0.2s ease-in-out;
 			} 
 
-			#pages neon-animatable, # {
+			#pages neon-animatable {
 				display: block;
 			}
 			.result-container {
 				display: block;
 				width: 100%;
 				word-wrap: break-word;
-				padding: 24px;
+				box-sizing: border-box;
 			}
 
 			#dataContainer {
 				@apply(--paper-font-headline);
+			}
+			#dataContainer query-block:not(:last-of-type) {
+				border-bottom: solid 1px rgba(0,0,0,0.3);
 			}
 
 			#errorContainer {
@@ -48,9 +53,19 @@
 
 		<div id="main" style="height: [[_height]]px">
 			<neon-animated-pages id="pages" selected="[[_state]]" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
-			    <neon-animatable><div id="emptyContainer" class="result-container"></div></neon-animatable>
-			    <neon-animatable><div id="dataContainer" class="result-container">[[_computeDataString(data)]]</div></neon-animatable>
-			    <neon-animatable><div id="errorContainer" class="result-container"><b>Error:</b> [[error]]</div></neon-animatable>
+			    <neon-animatable>
+			    	<div id="emptyContainer" class="result-container"></div>
+			    </neon-animatable>
+			    <neon-animatable>
+			    	<div id="dataContainer" class="result-container">
+			    		<template id="list" is="dom-repeat" items="[[_computeStatuses(data)]]">
+			    			<query-block status="[[item]]"></query-block>
+			    		</template>
+			    	</div>
+			    </neon-animatable>
+			    <neon-animatable>
+			    	<div id="errorContainer" class="result-container"><b>Error:</b> [[error]]</div>
+			    </neon-animatable>
 			</neon-animated-pages>
 		</div>
 		
@@ -97,6 +112,18 @@
 			},
 
 			/**
+			 * Private functions
+			 */
+			_setHeight(container) {
+				container.style.visibility = 'hidden';
+				container.style.position = 'absolute';
+				this._height = container.offsetHeight;
+				container.style.position = '';
+				container.style.visibility = '';
+				Polymer.dom(document.body).querySelector('#app').scroll(192);
+			},
+
+			/**
 			 * Property observers
 			 */
 			_dataChanged: function(data) {
@@ -124,24 +151,19 @@
 						this._height = 0;
 						return;
 					case 1:
-						container = this.$.dataContainer;
+						this.$.list.render();
+						this._setHeight(this.$.dataContainer);
 						break;
 					case 2:
-						container = this.$.errorContainer;
+						this._setHeight(this.$.errorContainer);
 						break;
 				}
-				container.style.visibility = 'hidden';
-				container.style.position = 'absolute';
-				this._height = 1000;//container.offsetHeight;
-				container.style.position = '';
-				container.style.visibility = '';
-				Polymer.dom(document.body).querySelector('#app').scroll(192);
 			},
 
-			_computeDataString: function(data) {
-				if(data === null)
-					return '';
-				return JSON.stringify(data);
+			_computeStatuses: function(data) {
+				if(data !== null && 'statuses' in data)
+					return data.statuses;
+				return [];
 			},
 		});
 	</script>
