@@ -5,6 +5,8 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 
+<link rel="import" href="../query-photo-viewer/query-photo-viewer.html">
+
 <dom-module id="query-block">
 	<template>
 		<style>
@@ -67,9 +69,12 @@
 
 			.info-container {
 				@apply(--paper-font-subhead);
+				height: 56px;
+				box-sizing: border-box;
 				color: rgba(0,0,0,0.7);
 			}
 			.info-container span {
+				@apply(--layout-flex);
 				padding: 0 4px;
 			}
 
@@ -114,7 +119,7 @@
 			<p class="text">[[_computeText(status)]]</p>
 		</div>
 		<div>
-			prettttty pictures
+			<query-photo-view photos="[[photos]]"></query-photo-view>
 		</div>
 
 	</template>
@@ -201,7 +206,11 @@
 			},
 
 			_computeText: function(status) {
-				return status.text || '';
+				if('text' in status) {
+					var text = status.text;
+					return text.replace(/(\s*https:\/\/t\.co\/\w+\s*)+$/, '');
+				}
+				return '';
 			},
 		});
 	</script>

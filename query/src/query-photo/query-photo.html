@@ -1,0 +1,117 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
+
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
+
+<dom-module id="query-photo">
+	<template>
+		<style>
+			:host {
+				display: block;
+				position: relative;
+				overflow: hidden;
+			}
+
+			#image {
+				width: 100%;
+				height: 100%;
+			}
+
+			#spinner {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+				margin: auto;
+				--paper-spinner-color: var(--primary-color, #fff);
+			}
+
+			#retryOverlay {
+				@apply(--layout-horizontal)
+				@apply(--layout-center-center);
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				right: 0;
+				background-color: rgba(0,0,0,0.3);
+			}
+			#retryOverlay iron-icon {
+				color: var(--primary-color, #fff);
+			}
+		</style>
+		
+		<paper-spinner-lite id="spinner" active="[[loading]]"></paper-spinner-lite>
+		<div id="retryOverlay" show="[[error]]">
+			<iron-icon icon="autorenew"></iron-icon>
+		</div>
+		<iron-image id="image"
+			error="{{error}}"
+			fade
+			loading="{{loaded}}"
+			preload
+			sizing="[[sizing]]">
+		</iron-image>
+
+	</template>
+	<script>
+		Polymer({
+			is: 'query-photo',
+
+			properties: {
+				photoUrl: {
+					type: String,
+					value: '',
+				},
+
+				linkUrl: {
+					type: String,
+					value: '',
+				},
+
+				active: {
+					type: Boolean,
+					value: false,
+					observer: '_observeActive',
+				},
+
+				sizing: {
+					type: String,
+					value: '',
+				},
+			},
+
+			listeners: {
+				'image.error-changed': '_handleImageErrorChanged'
+			},
+
+			/**
+			 * Property observers
+			 */
+			_observeActive: function(active) {
+				if(active && photoUrl !== '') {
+					this.$.image.src = this.photoUrl;
+				}
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleImageErrorChanged: function(e) {
+				this._setError(e.detail.value);
+			},
+
+			/**
+			 * Compute functions
+			 */
+			_computeImageSizing: function(overlayMode) {
+				return overlayMode ? 'sizing' : 'cover';
+			},
+ 		});
+	</script>
+</dom-module>

@@ -1,17 +1,99 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="../../bower_components/neon-animation/neon-animated-pages.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/slide-left-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/slide-from-left-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/slide-right-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/slide-from-right-animation.html">
+
+<link rel="import" href="../query-photo/query-photo.html">
+
 <dom-module id="query-photo-view">
 	<template>
 		<style>
 			:host {
 				display: block;
+				overflow: hidden;
+				border: solid 1px rgba(0,0,0,0.2);
+				border-radius: 3px;
+			}
+
+			.controller iron-icon {
+				@apply(--layout-horizontal);
+				@apply(--layout-center);
+				width: 20%;
+				position: absolute;
+				top: 0;
+				bottom: 0;
+				--iron-icon-fill-color: rgba(255,255,255,0.3);
+				--iron-icon-stroke-color: rgba(0,0,0,0.3);
+			}
+			.controller:hover {
+				--iron-icon-fill-color: rgba(255,255,255,1);
+			}
+
+			#leftController {
+				@apply(--layout-start-justified);
+				left: 0;
+			}
+			#rightController {
+				@apply(--layout-end-justified);
+				right: 0;
 			}
 		</style>
+
+		<neon-animated-pages selected="{{selected}}" selected-attribute="active" selectable="query-photo"
+			entry-animation="[[_computeEntryAnimtion(_right)]]" exit-animation="[[_computeExitAnimtion(_right)]]">
+		    <template is="dom-repeat" items="[[photos]]">
+		    	<query-photo photo-url="[[item.photo_url]]" link-url="[[item.expanded_url]]" sizing="cover"></query-photo>
+		    </template>
+		</neon-animated-pages>
+		<div id="leftController" class="controller">
+			<iron-icon icon="chevron-left"></iron-icon>
+		</div>
+		<div id="rightController" class="controller">
+			<iron-icon icon="chevron-right"></iron-icon>
+		</div>
 		
 	</template>
 	<script>
 		Polymer({
-			is: 'query-photo-view'
+			is: 'query-photo-view',
+
+			properties: {
+				photos: {
+					type: Array,
+					value: function() { return []; },
+				},
+
+				selected: {
+					type: String,
+					value: '',
+				},
+
+				/**
+				 * Private properties
+				 */
+				_right: {
+					type: Boolean,
+					value: false,
+					readOnly: true,
+				},
+			},
+
+			/**
+			 * Computed functions
+			 */
+			_computeEntryAnimtion: function(right) {
+				return right ? 'slide-from-right-animation' : 'slide-from-left-animation';
+			},
+
+			_computeExitAnimtion: function(right) {
+				return right ? 'slide-left-animation' : 'slide-right-animation';
+			},
 		});
 	</script>
 </dom-module>
