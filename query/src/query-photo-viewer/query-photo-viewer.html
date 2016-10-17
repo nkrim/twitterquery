@@ -11,7 +11,7 @@
 
 <link rel="import" href="../query-photo/query-photo.html">
 
-<dom-module id="query-photo-view">
+<dom-module id="query-photo-viewer">
 	<template>
 		<style>
 			:host {
@@ -48,7 +48,12 @@
 		<neon-animated-pages selected="{{selected}}" selected-attribute="active" selectable="query-photo"
 			entry-animation="[[_computeEntryAnimtion(_right)]]" exit-animation="[[_computeExitAnimtion(_right)]]">
 		    <template is="dom-repeat" items="[[photos]]">
-		    	<query-photo photo-url="[[item.photo_url]]" link-url="[[item.expanded_url]]" sizing="cover"></query-photo>
+		    	<query-photo 	photo-url="[[item.photo_url]]" 
+		    					link-url="[[item.expanded_url]]" 
+		    					height="[[item.height]]"
+		    					width="[[item.width]]"
+		    					sizing="cover">
+		    				</query-photo>
 		    </template>
 		</neon-animated-pages>
 		<div id="leftController" class="controller">
@@ -61,7 +66,7 @@
 	</template>
 	<script>
 		Polymer({
-			is: 'query-photo-view',
+			is: 'query-photo-viewer',
 
 			properties: {
 				photos: {

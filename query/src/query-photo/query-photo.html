@@ -74,10 +74,19 @@
 					value: '',
 				},
 
+				height: {
+					type: Number,
+					value: 0,
+				},
+
+				width: {
+					type: Number,
+					value: 0,
+				},
+
 				active: {
 					type: Boolean,
 					value: false,
-					observer: '_observeActive',
 				},
 
 				sizing: {
@@ -86,6 +95,10 @@
 				},
 			},
 
+			observers: [
+				'_observeActive(active,photoUrl)'
+			],
+
 			listeners: {
 				'image.error-changed': '_handleImageErrorChanged'
 			},
@@ -93,8 +106,8 @@
 			/**
 			 * Property observers
 			 */
-			_observeActive: function(active) {
-				if(active && photoUrl !== '') {
+			_observeActive: function(active, photoUrl) {
+				if(active && photoUrl) {
 					this.$.image.src = this.photoUrl;
 				}
 			},
@@ -103,7 +116,7 @@
 			 * Event handlers
 			 */
 			_handleImageErrorChanged: function(e) {
-				this._setError(e.detail.value);
+				//this._setError(e.detail.value);
 			},
 
 			/**

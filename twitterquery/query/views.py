@@ -135,11 +135,14 @@ def query(request):
 					media = p['entities']['media']
 					for m in media:
 						if 'type' in m and m['type'] == 'photo' and 'media_url' in m and m['media_url']:
+							size = m['sizes']['large'] or m['sizes']['medium'] or m['sizes']['small'] or m['sizes']['thumb'] or {'w': 0, 'h': 0}
 							Photo.objects.get_or_create(photo_id=m['id_str'],
 														defaults={ 
 															'photo_url': m['media_url'], 
 															'expanded_url': m['expanded_url'],
-															'status': status
+															'status': status,
+															'height': size['h'],
+															'width': size['w'],
 														})
 	except Exception as e:
 		# Cleanup to make sure no useless search is kept if it fails during construction

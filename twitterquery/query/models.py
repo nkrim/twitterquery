@@ -59,5 +59,7 @@ class Photo(models.Model):
 	photo_id = models.CharField(max_length=100, primary_key=True)
 	photo_url = models.URLField()
 	expanded_url = models.URLField()
+	height = models.PositiveIntegerField()
+	width = models.PositiveIntegerField()
 	# Model relations
 	status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='photos', related_query_name='photo')
