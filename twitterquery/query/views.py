@@ -205,7 +205,7 @@ def query(request):
 	# Filter and contruct status objects
 	try:
 		for p in posts:
-			if ('retweeted_status' in p ) and 'entities' in p and 'media' in p['entities']:
+			if (search.retweets or not 'retweeted_status' in p) and 'entities' in p and 'media' in p['entities']:
 				media = [m for m in p['entities']['media'] if 'type' in m and m['type'] == 'photo' and 'media_url' in m and m['media_url']]
 				if len(media) > 0:
 					u = p['user']
