@@ -25,12 +25,13 @@ class AuthAdmin(admin.ModelAdmin):
 	readonly_fields = ('bearer',)
 
 class SearchAdmin(admin.ModelAdmin):
-	list_display = ('id', 'query', 'time_of', 'limit', )
+	list_display = ('pk', 'query', 'time_of', 'limit', )
+	list_display_links = ('id', 'query')
 	search_fields = ['query']
 	list_filter = ['time_of']
 	fieldsets = (
 		(None, {
-			'fields': ('query', 'limit', 'retweets', 'time_of')
+			'fields': ('pk', 'query', 'limit', 'retweets', 'time_of')
 		}),
 	)
 	readonly_fields = ('time_of',)
