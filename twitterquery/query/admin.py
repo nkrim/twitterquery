@@ -31,7 +31,8 @@ class SearchAdmin(admin.ModelAdmin):
 	list_filter = ['time_of']
 	fieldsets = (
 		(None, {
-			'fields': ('pk', 'query', 'limit', 'retweets', 'time_of')
+			'fields': ('pk', 'query', 'limit', 'retweets', 'time_of'),
+			'readonly_fields': ('pk',)
 		}),
 	)
 	readonly_fields = ('time_of',)
