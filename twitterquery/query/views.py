@@ -122,7 +122,7 @@ def query(request):
 	try:
 		for p in posts:
 			if ('retweeted_status' in p ) and 'entities' in p and 'media' in p['entities']:
-				media = [m for m in p['entities']['media'] if m.type == 'photo']
+				media = [m for m in p['entities']['media'] if 'type' in m and m['type'] == 'photo' and 'media_url' in m and m['media_url']]
 				if len(media) > 0:
 					u = p['user']
 					user, user_created = TwitterUser.objects.update_or_create(	user_id=u['id_str'], 
@@ -142,20 +142,19 @@ def query(request):
 					status.save()
 					if status_created:
 						for m in media:
-							if 'type' in m and m['type'] == 'photo' and 'media_url' in m and m['media_url']:
-								if 'sizes' in m:
-									sizes = m['sizes']
-									size = sizes.get('large') or sizes.get('medium') or sizes.get('small') or sizes.get('thumb') or {'w': 0, 'h': 0}
-								else:
-									size = {'w': 0, 'h': 0}
-								Photo.objects.get_or_create(photo_id=m['id_str'],
-															defaults={ 
-																'photo_url': m['media_url'], 
-																'expanded_url': m['expanded_url'],
-																'status': status,
-																'height': size['h'],
-																'width': size['w'],
-															})
+							if 'sizes' in m:
+								sizes = m['sizes']
+								size = sizes.get('large') or sizes.get('medium') or sizes.get('small') or sizes.get('thumb') or {'w': 0, 'h': 0}
+							else:
+								size = {'w': 0, 'h': 0}
+							Photo.objects.get_or_create(photo_id=m['id_str'],
+														defaults={ 
+															'photo_url': m['media_url'], 
+															'expanded_url': m['expanded_url'],
+															'status': status,
+															'height': size['h'],
+															'width': size['w'],
+														})
 	except Exception as e:
 		# Cleanup to make sure no useless search is kept if it fails during construction
 		for s in search.statuses.all():
