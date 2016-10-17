@@ -23,6 +23,90 @@ def makeJsonResponsePretty(data):
 	output = json.dumps(data, indent=4)
 	return HttpResponse(output, content_type='application/json')
 
+def raw(request):
+	def get_bearer(auth):
+		if auth.bearer != '':
+			return auth.bearer
+		cat = quote_plus(auth.key,'')+':'+quote_plus(auth.secret,'')
+		bearer = urlsafe_b64encode(cat.encode()).decode()
+		url = 'https://api.twitter.com/oauth2/token'
+		data = urlencode([('grant_type','client_credentials')]).encode()
+		headers = {
+			'Authorization': 'Basic '+bearer,
+			'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+		}
+		try:
+			response = urlopen(Request(url, data, headers, method='POST'))
+			jsondict = json.loads(response.read().decode())
+		except Exception as e:
+			return auth.bearer
+		else:
+			if 'token_type' in jsondict and jsondict['token_type'] == 'bearer' and 'access_token' in jsondict and jsondict['access_token']:
+				auth.bearer = jsondict['access_token']
+				auth.save()
+			return auth.bearer
+	def get_search_results(bearer, search):
+		query = urlencode([
+			('q',search.query),
+			('result_type','recent'),
+			('count',str(search.limit))
+		])
+		url = 'https://api.twitter.com/1.1/search/tweets.json?'+query
+		headers = {
+			'Authorization': 'Bearer '+bearer
+		}
+		try:
+			response = urlopen(Request(url, headers=headers, method='GET'))
+			results = json.loads(response.read().decode())
+		except Exception as e:
+			return (None, e)
+		else:
+			return (response, results)
+	# Parse query params
+	q = request.GET.get('q',None)
+	if q == None:
+		return JsonResponse({'success':False, 'code':0, 'error':'Missing query parameter'}, status=400)
+	if q == '':
+		return JsonResponse({'success':False, 'code':1, 'error':'Empty query parameter'}, status=400)
+	limit = request.GET.get('limit',None)
+	retweets = request.GET.get('rt',None)
+
+	# Construct the search object
+	search = Search(query=q)
+	if limit != None:
+		try:
+			search.limit = int(limit)
+		except ValueError:
+			pass
+	if retweets != None and retweets.lower() == 'true':
+		search.retweets = True
+
+
+	# Get initial bearer authentication
+	site = get_current_site(request)
+	if not hasattr(site, 'auth'):
+		return JsonResponse({'success':False, 'code':2, 'error':'No authentication details found'}, status=500)
+	auth = site.auth
+	bearer = get_bearer(auth)
+
+	# Search for posts
+	response, results = get_search_results(bearer, search)
+	if response is None:
+		return JsonResponse({'success':False, 'code':3, 'error':'Error when querying twitter api: '+str(results)}, status=500)
+	if response.status == 401:	# Repeat authentication steps by getting new bearer token
+		auth.bearer = ''
+		bearer = get_bearer(auth)
+		response, results = get_search_results(bearer, search)
+	if response is None:
+		return JsonResponse({'success':False, 'code':3, 'error':'Error when querying twitter api: '+str(results)}, status=500)
+	if response.status == 429:
+		return JsonResponse({'success':False, 'code':4, 'error':'Rate limit exceeded', 'wait':response.getheader('X-Rate-Limit-Reset')-int(floot(time.time()))}, status=429)
+	if response is None or response.status != 200 or len(results) == 0 or not 'search_metadata' in results or not 'statuses' in results:
+		return JsonResponse({'success':False, 'code':5, 'error':'Failed search: '+str(response.status_code)}, status=500)
+	post_count = results['search_metadata']['count']
+	posts = results['statuses']
+	return makeJsonResponsePretty(posts)
+
 '''
 ERROR CODES
 - 0: Missing query parameter
