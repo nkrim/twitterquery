@@ -26,16 +26,15 @@ class AuthAdmin(admin.ModelAdmin):
 
 class SearchAdmin(admin.ModelAdmin):
 	list_display = ('pk', 'query', 'time_of', 'limit', )
-	list_display_links = ('id', 'query')
+	list_display_links = ('pk', 'query')
 	search_fields = ['query']
 	list_filter = ['time_of']
 	fieldsets = (
 		(None, {
 			'fields': ('pk', 'query', 'limit', 'retweets', 'time_of'),
-			'readonly_fields': ('pk',)
 		}),
 	)
-	readonly_fields = ('time_of',)
+	readonly_fields = ('pk', 'time_of',)
 	inlines = [SearchStatusThroughInline]
 
 class TwitterUserAdmin(admin.ModelAdmin):
