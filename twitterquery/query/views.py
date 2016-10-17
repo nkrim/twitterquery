@@ -135,7 +135,11 @@ def query(request):
 					media = p['entities']['media']
 					for m in media:
 						if 'type' in m and m['type'] == 'photo' and 'media_url' in m and m['media_url']:
-							size = m['sizes']['large'] or m['sizes']['medium'] or m['sizes']['small'] or m['sizes']['thumb'] or {'w': 0, 'h': 0}
+							if 'sizes' in m:
+								sizes = m['sizes']
+								size = sizes.get('large') or sizes.get('medium') or sizes.get('small') or sizes.get('thumb') or {'w': 0, 'h': 0}
+							else:
+								size = {'w': 0, 'h': 0}
 							Photo.objects.get_or_create(photo_id=m['id_str'],
 														defaults={ 
 															'photo_url': m['media_url'], 
