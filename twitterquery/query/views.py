@@ -80,11 +80,18 @@ def query(request):
 	if q == '':
 		return JsonResponse({'success':False, 'code':1, 'error':'Empty query parameter'}, status=400)
 	limit = request.GET.get('limit',None)
+	retweets = request.GET.get('rt',None)
 
 	# Construct the search object
 	search = Search(query=q)
 	if limit != None:
-		search.limit = limit
+		try:
+			search.limit = int(limit)
+		except ValueError:
+			pass
+	if retweets != None and retweets.lower() == 'true':
+		search.retweets = True
+
 
 	# Get initial bearer authentication
 	site = get_current_site(request)
@@ -114,40 +121,41 @@ def query(request):
 	# Filter and contruct status objects
 	try:
 		for p in posts:
-			if 'entities' in p and 'media' in p['entities']:
-				u = p['user']
-				user, user_created = TwitterUser.objects.update_or_create(	user_id=u['id_str'], 
+			if ('retweeted_status' in p ) and 'entities' in p and 'media' in p['entities']:
+				media = [m for m in p['entities']['media'] if m.type == 'photo']
+				if len(media) > 0:
+					u = p['user']
+					user, user_created = TwitterUser.objects.update_or_create(	user_id=u['id_str'], 
+																				defaults={
+																					'screen_name': u['screen_name'],
+																					'name': u['name'],
+																					'location': u['location'],
+																					'followers_count': u['followers_count'],
+																					'profile_image_url': u['profile_image_url']
+																				})
+					status, status_created = Status.objects.get_or_create(created_by=user, status_id=p['id_str'], 
 																			defaults={
-																				'screen_name': u['screen_name'],
-																				'name': u['name'],
-																				'location': u['location'],
-																				'followers_count': u['followers_count'],
-																				'profile_image_url': u['profile_image_url']
+																				'created_at': datetime.strptime(p['created_at'],'%a %b %d %X %z %Y'),
+																				'text': p['text']
 																			})
-				status, status_created = Status.objects.get_or_create(created_by=user, status_id=p['id_str'], 
-																		defaults={
-																			'created_at': datetime.strptime(p['created_at'],'%a %b %d %X %z %Y'),
-																			'text': p['text']
-																		})
-				status.searches.add(search)
-				status.save()
-				if status_created:
-					media = p['entities']['media']
-					for m in media:
-						if 'type' in m and m['type'] == 'photo' and 'media_url' in m and m['media_url']:
-							if 'sizes' in m:
-								sizes = m['sizes']
-								size = sizes.get('large') or sizes.get('medium') or sizes.get('small') or sizes.get('thumb') or {'w': 0, 'h': 0}
-							else:
-								size = {'w': 0, 'h': 0}
-							Photo.objects.get_or_create(photo_id=m['id_str'],
-														defaults={ 
-															'photo_url': m['media_url'], 
-															'expanded_url': m['expanded_url'],
-															'status': status,
-															'height': size['h'],
-															'width': size['w'],
-														})
+					status.searches.add(search)
+					status.save()
+					if status_created:
+						for m in media:
+							if 'type' in m and m['type'] == 'photo' and 'media_url' in m and m['media_url']:
+								if 'sizes' in m:
+									sizes = m['sizes']
+									size = sizes.get('large') or sizes.get('medium') or sizes.get('small') or sizes.get('thumb') or {'w': 0, 'h': 0}
+								else:
+									size = {'w': 0, 'h': 0}
+								Photo.objects.get_or_create(photo_id=m['id_str'],
+															defaults={ 
+																'photo_url': m['media_url'], 
+																'expanded_url': m['expanded_url'],
+																'status': status,
+																'height': size['h'],
+																'width': size['w'],
+															})
 	except Exception as e:
 		# Cleanup to make sure no useless search is kept if it fails during construction
 		for s in search.statuses.all():

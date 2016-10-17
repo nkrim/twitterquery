@@ -25,12 +25,12 @@ class AuthAdmin(admin.ModelAdmin):
 	readonly_fields = ('bearer',)
 
 class SearchAdmin(admin.ModelAdmin):
-	list_display = ('query', 'pk', 'time_of', 'limit', )
+	list_display = ('id', 'query', 'time_of', 'limit', )
 	search_fields = ['query']
 	list_filter = ['time_of']
 	fieldsets = (
 		(None, {
-			'fields': ('query', 'limit', 'time_of')
+			'fields': ('query', 'limit', 'retweets', 'time_of')
 		}),
 	)
 	readonly_fields = ('time_of',)
@@ -64,7 +64,7 @@ class PhotoAdmin(admin.ModelAdmin):
 	search_fields = ['photo_id', 'status__status_id', 'status__created_by__screen_name', 'status__created_by__name']
 	fieldsets = (
 		(None, {
-			'fields': ('photo_id', ('photo_url', 'expanded_url'), 'status')
+			'fields': ('status', 'photo_id', ('photo_url', 'expanded_url'), ('height', 'width'))
 		}),
 	)
 

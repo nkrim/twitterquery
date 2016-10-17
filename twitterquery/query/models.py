@@ -42,6 +42,7 @@ class Search(models.Model):
 	# Value fields
 	query = models.CharField(max_length=500)
 	limit = models.PositiveIntegerField(default=15)
+	retweets = models.BooleanField(default=False)
 	# Auto fields
 	time_of = models.DateTimeField(auto_now_add=True)
 	# Model relations

@@ -51,12 +51,14 @@
 			<iron-icon icon="autorenew"></iron-icon>
 		</div>
 		<iron-image id="image"
-			error="{{error}}"
-			fade
-			loading="{{loaded}}"
-			preload
-			sizing="[[sizing]]">
-		</iron-image>
+					error="{{error}}"
+					fade
+					loading="{{loaded}}"
+					preload
+					sizing="[[sizing]]"
+					height="[[_computeHeight(height,maxHeight)]]"
+					width="[[_computeWidth(width,maxWidth)]]">
+				</iron-image>
 
 	</template>
 	<script>
@@ -72,16 +74,6 @@
 				linkUrl: {
 					type: String,
 					value: '',
-				},
-
-				height: {
-					type: Number,
-					value: 0,
-				},
-
-				width: {
-					type: Number,
-					value: 0,
 				},
 
 				active: {
@@ -124,6 +116,15 @@
 			 */
 			_computeImageSizing: function(overlayMode) {
 				return overlayMode ? 'sizing' : 'cover';
+			},
+
+			_computeHeight: function(height, maxHeight) {
+				return height < maxHeight ? height : maxHeight;
+			},
+
+			_computeWidth: function(width, maxWidth) {
+				//return width < maxWidth ? width : maxWidth;
+				return maxWidth;
 			},
  		});
 	</script>

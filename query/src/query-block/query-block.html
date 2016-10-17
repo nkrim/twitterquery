@@ -95,6 +95,17 @@
 					height: 48px;
 				}
 			}
+
+			.date {
+				@apply(--paper-font-subhead);
+				display: block;
+				color: rgba(0,0,0,0.7);
+				margin: 0;
+			}
+
+			.text {
+				margin-top: 0px;
+			}
 		</style>
 		
 		<div class="block-header">
@@ -116,6 +127,7 @@
 			</div>
 		</div>
 		<div>
+			<span class="date">[[_computeDate(status)]]</span>
 			<p class="text">[[_computeText(status)]]</p>
 		</div>
 		<div>
@@ -201,6 +213,18 @@
 					var userLink = this._computeUserLink(user);
 					if(userLink !== '')
 						return userLink+'/status/'+status.status_id;
+				}
+				return '';
+			},
+
+			_computeDate: function(status) {
+				if('created_at' in status) {
+					var result = status.created_at.match(/^(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)Z$/);
+					if(result.length > 6) {
+						var date = new Date(Date.UTC(result[1], result[2]-1, result[3], result[4], result[5], result[6]));
+						console.log(date.getTimezoneOffset());
+						return date.toLocaleString();
+					}
 				}
 				return '';
 			},

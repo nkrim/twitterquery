@@ -326,7 +326,6 @@
           return -diff * t*(t-2) + cur;
         };
         var move = function() {
-          console.log(this.scrollId);
           t = Date.now() - start;
           if(t > dur) {
             window.scrollTo(left, top);
