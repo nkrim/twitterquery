@@ -187,7 +187,7 @@ def query(request):
 			pass
 		else:
 			if limitInt > 0:
-				intance.limit = min(100,limitInt)
+				instance.limit = min(100,limitInt)
 				instance.save()
 
 	# Consruct statuses

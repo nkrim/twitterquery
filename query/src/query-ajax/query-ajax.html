@@ -47,16 +47,7 @@
 					value: false,
 					notify: true,
 				},
-
-				auto: {
-					type: Boolean,
-					value: false,
-				},
 			},
-
-			observers: [
-				'_observeAutoQuery(query)'
-			],
 
 			listeners: {
 				'ajax.last-response-changed': '_handleAjaxResponse',
@@ -99,19 +90,6 @@
 					params['limit'] = limit;
 
 				return params;
-			},
-
-			/**
-			 * Observer handlers
-			 */
-			_observeAutoQuery: function(query) {
-				if(!this.autoReady) {
-					this.autoReady = true;
-					return;
-				}
-				if(this.auto) {
-					this.makeQuery();
-				}
 			},
 
 			/**
