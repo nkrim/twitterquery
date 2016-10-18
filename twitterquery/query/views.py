@@ -182,11 +182,13 @@ def query(request):
 	instance = QueryInstance.objects.create(query=q, max_id=results['max_id'], search=search)
 	if limit:
 		try:
-			instance.limit = int(limit)
+			limitInt = int(limit)
 		except ValueError:
 			pass
 		else:
-			instance.save()
+			if limitInt > 0:
+				intance.limit = min(100,limitInt)
+				instance.save()
 
 	# Consruct statuses
 	if created:

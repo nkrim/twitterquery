@@ -53,8 +53,16 @@
 			}
 			#limitContainer paper-slider {
 				@apply(--layout-flex);
-				--paper-slider-active-color: var(--primary-color, #55acee);
-				--paper-slider-knob-color: var(--primary-color, #55acee);
+				color: var(--paper-slider-disabled-active-color, #ccc);
+				--paper-slider-active-color: currentcolor;
+				--paper-slider-knob-color: currentcolor;
+				-webkit-transition: color 0.16s linear;
+				-moz-transition: color 0.16s linear;
+				-o-transition: color 0.16s linear;
+				transition: color 0.16s linear;
+			}
+			#limitContainer paper-slider[active] {
+				color: var(--primary-color, #55acee);
 			}
 		</style>
 		
@@ -63,22 +71,24 @@
 			<paper-icon-button id="close" icon="close"></paper-icon-button>
 		</div>
 		<div id="limitContainer" class="field-container">
-			<paper-input 	id="limit"
+			<paper-input 	id="limitInput"
 							auto-validate 
-							error-message="[0, 1000]"
+							error-message="[0, 100]"
 							label="Limit"
-							max="1000"
+							max="100"
 							min="0"
 							type="number"
 							value="[[limit]]">
 						</paper-input>
 			<paper-slider 	id="limitSlider"
-							max="1000"
+							max="100"
 							min="0"
 							snaps
-							step="10"
-							max-markers="20"
+							max-markers="10"
+							step="5"
+							toggles
 							value="[[limit]]">
+						</paper-slider>
 		</div>
 
 	</template>
@@ -91,18 +101,21 @@
 			properties: {
 				limit: {
 					type: Number,
-					value: 100,
+					value: 10,
+					notify: true,
 				},
 			},
 
 			listeners: {
 				'close.tap': '_handleClose',
-				'limit.change': '_handleLimitChange',
+				'limitInput.change': '_handleLimitInputChange',
 				'limitSlider.change': '_handleLimitSliderChange',
 				'limitSlider.immediate-value-changed': '_handleLimitSliderImmediateChanged',
+				'limitSlider.active-changed': '_handleLimitSliderActiveChanged',
 			},
 
 			ready: function() {
+				// Set inherited values
 				this.withBackdrop = true;
 			},
 
@@ -113,21 +126,35 @@
 				this.close();
 			},
 
-			_handleLimitChange: function() {
+			_handleLimitInputChange: function() {
 				this.limitChange = true;
-				this.limit = parseInt(this.$.limit.value) || this.$.limitSlider.value;
+				this.limit = parseInt(this.$.limitInput.value) || this.$.limitSlider.value;
 			},
 
 			_handleLimitSliderChange: function() {
-				this.limit = this.$.limitSlider.value;
+				if(this.$.limitSlider.active)
+					this.limit = this.$.limitSlider.value;
 			},
 
 			_handleLimitSliderImmediateChanged: function(e) {
-				console.log(e);
 				if(this.limitChange)
 					this.limitChange = false;
+				else if(this.$.limitSlider.active)
+					this.$.limitInput.value = e.detail.value;
 				else
-					this.$.limit.value = e.detail.value;
+					this.$.limitSlider.active = true;
+			},
+
+			_handleLimitSliderActiveChanged: function(e) {
+				if(e.detail.value) {
+					this.limit = this.prev_limit || 0;
+					this.$.limitInput.disabled = false;
+				}
+				else {
+					this.prev_limit = this.limit;
+					this.limit = null;
+					this.$.limitInput.disabled = true;
+				}
 			},
 		});
 	</script>

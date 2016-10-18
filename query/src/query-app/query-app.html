@@ -231,11 +231,11 @@
 
 
       <div class="main-container">
-        <query-main id="main" success="{{success}}" search-id="{{searchId}}"></query-main>
+        <query-main id="main" success="{{success}}" search-id="{{searchId}}" limit="[[limit]]"></query-main>
       </div>
     </app-header-layout>
 
-    <query-settings-overlay id="settingsOverlay" limit={{limit}}></query-settings-overlay>
+    <query-settings-overlay id="settingsOverlay" limit="{{limit}}"></query-settings-overlay>
 
   </template>
   <script>
