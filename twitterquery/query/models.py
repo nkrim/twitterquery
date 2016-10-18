@@ -20,6 +20,9 @@ class TwitterUser(models.Model):
 	followers_count = models.PositiveIntegerField()
 	profile_image_url = models.URLField()
 
+	def user_id_str(self):
+		return str(self.user_id)
+
 	def __str__(self):
 		return '@'+self.screen_name
 
@@ -30,6 +33,9 @@ class Status(models.Model):
 	text = models.CharField(max_length=200)
 	# Model relations
 	created_by = models.ForeignKey(TwitterUser, on_delete=models.CASCADE, related_name='statuses', related_query_name='status')
+
+	def status_id_str(self):
+		return str(self.status_id)
 
 	def __str__(self):
 		return '{}:{}'.format(self.created_by, self.status_id)
@@ -66,11 +72,11 @@ class QueryInstance(models.Model):
 	# Model relations
 	search = models.ForeignKey(Search, on_delete=models.CASCADE, related_name='instances', related_query_name='instance')
 
-	def __str__(self):
-		return '{} {}'.format(unquote_plus(self.query), self.time_of.strftime('%Y-%m-%d %H:%M:%S'))
-
 	def statuses(self):
 		return self.search.statuses.filter(status_id__lte=self.max_id)[:self.limit] if self.success else Status.objects.none()
+
+	def __str__(self):
+		return '{} {}'.format(unquote_plus(self.query), self.time_of.strftime('%Y-%m-%d %H:%M:%S'))
 
 	class Meta:
 		ordering = ['-time_of']
@@ -83,3 +89,9 @@ class Photo(models.Model):
 	width = models.PositiveIntegerField()
 	# Model relations
 	status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='photos', related_query_name='photo')
+
+	def photo_id_str(self):
+		return str(self.photo_id)
+
+	class Meta:
+		ordering = ['status', 'photo_id']

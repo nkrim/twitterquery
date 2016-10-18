@@ -2,16 +2,21 @@ from rest_framework import serializers
 from .models import *
 
 class PhotoSerializer(serializers.ModelSerializer):
+	photo_id_str = serializers.CharField()
+
 	class Meta:
 		model = Photo
 		fields = '__all__'
 
 class TwitterUserSerializer(serializers.ModelSerializer):
+	user_id_str = serializers.CharField()
+
 	class Meta:
 		model = TwitterUser
 		fields = '__all__'
 
 class StatusSerializer(serializers.ModelSerializer):
+	status_id_str = serializers.CharField()
 	photos = PhotoSerializer(many=True)
 	created_by = TwitterUserSerializer()
 
