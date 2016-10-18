@@ -4,9 +4,9 @@ from . import views
 
 urlpatterns = [
 	url(r'^$', views.query, name="query"),
-	url(r'^raw/$', views.raw, name="raw"),
-	url(r'^(?P<search_pk>\d+)/', include([
+	url(r'^(?P<query_pk>\d+)/', include([
 		url(r'^$', views.get, name="get"),
 		url(r'^download/$', views.download, name="download"),
 	])),
+	url(r'raw/', views.raw, name="raw"),
 ]

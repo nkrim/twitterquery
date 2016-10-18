@@ -8,9 +8,7 @@
 <link rel="import" href="../../bower_components/app-route/app-location.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
-<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="../../bower_components/iron-input/iron-input.html">
 
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
@@ -23,6 +21,7 @@
 
 <link rel="import" href="../query-main/query-main.html">
 <link rel="import" href="../query-search-bar/query-search-bar.html">
+<link rel="import" href="../query-settings-overlay/query-settings-overlay.html">
 
 <dom-module id="query-app">
   <template>
@@ -190,6 +189,7 @@
         color: #fff;
         width: 48px;
         height: 48px;
+        margin-left: 8px;
       }
 
       .main-container {
@@ -235,6 +235,8 @@
       </div>
     </app-header-layout>
 
+    <query-settings-overlay id="settingsOverlay" limit={{limit}}></query-settings-overlay>
+
   </template>
   <script>
     Polymer({
@@ -272,11 +274,19 @@
         'searchBar.search-button-down': '_handleSearchButonDown',
         'searchBar.search-button-up': '_handleSearchButonUp',
         'searchButton.tap': '_handleSearchButton',
+        'settings.tap': '_handleSettings',
       }, 
 
       ready: function() {
         // Set defaults
         this.scrollId = null;
+
+        // Set settings overlay defaults
+        var overlay = this.$.settingsOverlay;
+        overlay.positionTarget = this.$.settings;
+        overlay.verticalAlign = 'top';
+        overlay.horizontalAlign = 'right';
+
         // Perform initial search based on url params
         var params = this.$.location.queryParams || {};
         if('limit' in params) {
@@ -393,7 +403,11 @@
         // Set app-location queryParams
         var main = this.$.main;
         this._setLocationParams(main.query, main.limit);
-      }
+      },
+
+      _handleSettings: function(e) {
+        this.$.settingsOverlay.open();
+      },
     });
   </script>
 </dom-module>

@@ -1,0 +1,134 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="../../bower_components/iron-validator-behavior/iron-validator-behavior.html">
+
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<!--
+	VALIDATORS
+-->
+
+
+<!--
+	OVERLAY
+-->
+<dom-module id="query-settings-overlay">
+	<template>
+		<style>
+			:host {
+				display: block;
+				background-color: #fff;
+				border-radius: 8px;
+				width: 720px;
+				padding: 24px;
+			}
+
+			.settings-header {
+				@apply(--layout-horizontal);
+				@apply(--layout-justified);
+				@apply(--layout-center);
+			}
+
+			#close {
+				height: 48px;
+				width: 48px;
+			}
+
+			.settings-title {
+				@apply(--paper-font-display1);
+			}
+
+			#limitContainer {
+				@apply(--layout-horizontal);
+				@apply(--layout-end);
+			}
+			#limitContainer paper-input {
+				width: 64px;
+			}
+			#limitContainer paper-slider {
+				@apply(--layout-flex);
+				--paper-slider-active-color: var(--primary-color, #55acee);
+				--paper-slider-knob-color: var(--primary-color, #55acee);
+			}
+		</style>
+		
+		<div class="settings-header">
+			<span class="settings-title">Settings</span>
+			<paper-icon-button id="close" icon="close"></paper-icon-button>
+		</div>
+		<div id="limitContainer" class="field-container">
+			<paper-input 	id="limit"
+							auto-validate 
+							error-message="[0, 1000]"
+							label="Limit"
+							max="1000"
+							min="0"
+							type="number"
+							value="[[limit]]">
+						</paper-input>
+			<paper-slider 	id="limitSlider"
+							max="1000"
+							min="0"
+							snaps
+							step="10"
+							max-markers="20"
+							value="[[limit]]">
+		</div>
+
+	</template>
+	<script>
+		Polymer({
+			is: 'query-settings-overlay',
+
+			behaviors: [Polymer.IronOverlayBehavior],
+
+			properties: {
+				limit: {
+					type: Number,
+					value: 100,
+				},
+			},
+
+			listeners: {
+				'close.tap': '_handleClose',
+				'limit.change': '_handleLimitChange',
+				'limitSlider.change': '_handleLimitSliderChange',
+				'limitSlider.immediate-value-changed': '_handleLimitSliderImmediateChanged',
+			},
+
+			ready: function() {
+				this.withBackdrop = true;
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleClose: function() {
+				this.close();
+			},
+
+			_handleLimitChange: function() {
+				this.limitChange = true;
+				this.limit = parseInt(this.$.limit.value) || this.$.limitSlider.value;
+			},
+
+			_handleLimitSliderChange: function() {
+				this.limit = this.$.limitSlider.value;
+			},
+
+			_handleLimitSliderImmediateChanged: function(e) {
+				console.log(e);
+				if(this.limitChange)
+					this.limitChange = false;
+				else
+					this.$.limit.value = e.detail.value;
+			},
+		});
+	</script>
+</dom-module>

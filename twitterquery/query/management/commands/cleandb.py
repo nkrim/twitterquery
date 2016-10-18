@@ -23,6 +23,9 @@ class Command(BaseCommand):
 		parser.add_argument('-a', '--all',
 							action='store_true',
 							help='If present, all search entries are deleted, regardless of the `date` argument, the only thing that will be left in the database is the authentication settings')
+		parser.add_argument('-m', '--merge',
+							action='store_true',
+							help='If present, forces a check on search entries and merges and overlapping ones. This action is performed before all actions except a full delete from the `-a` flag')
 
 	def handle(self, *args, **options):
 		if options['all']:
@@ -30,6 +33,8 @@ class Command(BaseCommand):
 			count, deleted = Search.objects.all().delete()
 			print('Search cleaning completed\n\t'+str(count)+' searches deleted')
 		else:
+			if options['merge']:
+				merge()
 			datestring = options['date']
 			dateformat = options['format']
 			usetimestamp = options['timestamp']
@@ -50,7 +55,7 @@ class Command(BaseCommand):
 						printerr('Error: Could not parse `date` argument "'+datestring+'" with format string "'+dateformat+'"')
 				if date:
 					print('Finding all out-dated search entries')
-					count, deleted = Search.objects.filter(time_of__lt=date).delete()
+					count, deleted = Search.objects.filter(last_accessed__lt=date).delete()
 					print('Search cleaning completed\n\t'+str(count)+' searches deleted')
 		print('Finding all statuses with no related searches')
 		count, deleted = Status.objects.filter(search__isnull=True).delete()
@@ -58,6 +63,33 @@ class Command(BaseCommand):
 		print('Finding all twitter users with no related statuses')
 		count, deleted = TwitterUser.objects.filter(status__isnull=True).delete()
 		print('Twitter User cleaning completed\n\t'+str(count)+' users deleted')
+
+def merge():
+	queries = {}
+	for s in Search.objects.all():
+		q = s.query
+		if not q in queries:
+			queries[q] = []
+		queries[q].append(s)
+	for q, searches in queries.items():
+		print('Merging searches with query "{}"\n\t{} searches found'.format(q, len(searches)))
+		if len(searches) > 1:
+			prev = searches[0]
+			for i in range(1,len(searches)):
+				cur = searches[i]
+				if prev.min_id <= cur.max_id:
+					print('Merging searches:\n\t{}\n\t{}'.format(prev, cur))
+					for i in prev.instances.all():
+						i.search = cur
+						i.save()
+					for s in prev.statuses.all():
+						s.searches.add(cur)
+					cur.min_id = min(cur.min_id, prev.min_id)
+					print('deleting '+str(prev))
+					prev.delete()
+					prev = cur
+					print('saving '+str(prev))
+					prev.save()
 
 def printerr(*args, **kwargs):
 	print(*args, file=stderr, **kwargs)
