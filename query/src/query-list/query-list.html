@@ -16,41 +16,44 @@
 			:host {
 				display: block;
 				position: relative;
+				opacity: 1;
+				visibility: visible;
 			}
 
 			#main {
 				width: 100%;
-				background-color: #fff;
-				border-radius: 10px;
 				overflow: hidden;
-				-webkit-transition: height 0.2s ease-in-out;
-				-moz-transition: height 0.2s ease-in-out;
-				-o-transition: height 0.2s ease-in-out;
-				transition: height 0.2s ease-in-out;
-			} 
+			}
 
 			#pages neon-animatable {
 				display: block;
 			}
 			.result-container {
+				@apply(--paper-font-headline);
 				display: block;
+				background-color: #fff;
+				border-radius: 10px;
 				word-wrap: break-word;
 				box-sizing: border-box;
 			}
 
 			#dataContainer {
-				@apply(--paper-font-headline);
+				
 			}
 			#dataContainer query-block:not(:last-of-type) {
 				border-bottom: solid 1px rgba(0,0,0,0.3);
 			}
 
-			#messageContainer:not([empty]) {
+			#messageContainer {
 				padding: 24px;
 			}
 
 			#errorContainer {
-				@apply(--paper-font-headline);
+				padding: 24px;
+			}
+
+			.optional-message-container:not([empty]) {
+				padding: 24px;
 			}
 		</style>
 
@@ -60,8 +63,11 @@
 			    	<div id="emptyContainer" class="result-container"></div>
 			    </neon-animatable>
 			    <neon-animatable>
+			    	<div id="messageContainer" class="result-container">[[message]]</div>
+			    </neon-animatable>
+			    <neon-animatable>
 			    	<div id="dataContainer" class="result-container">
-			    		<div id="messageContainer" empty$="[[_isEmptyString(message)]]">[[message]]</div>
+			    		<div class="optional-message-container" empty$="[[_isEmptyString(message)]]">[[message]]</div>
 			    		<template id="list" is="dom-repeat" items="[[_computeStatuses(data)]]">
 			    			<query-block status="[[item]]"></query-block>
 			    		</template>
@@ -88,6 +94,7 @@
 				message: {
 					type: String,
 					value: '',
+					observer: '_messageChanged',
 				},
 
 				error: {
@@ -112,36 +119,77 @@
 				}
 			},
 
+			ready: function() {
+				this.listen(Polymer.dom(document.body).querySelector('#app'), 'scroll-finished', '_handleScrollFinished')
+			},
+
 			/**
 			 * Public functions
 			 */
 			clear: function() {
 				this._set_state(0);
 				this.data = null;
+				this.message = '';
 				this.error = '';
+			},
+
+			resetHeight: function(state=null, scroll=false, scrollCompensate=false) {
+				var container;
+				var scrollTo = -1;
+				switch(state!==null ? state : this._state) {
+					case 0:
+						container = this.$.emptyContainer;
+						scrollTo = 0;
+						break;
+					case 1:
+						container = this.$.messageContainer;
+						scrollTo = 0;
+						break;
+					case 2:
+						this.$.list.render();
+						container = this.$.dataContainer;
+						scrollTo = 192;
+						break;
+					case 3:
+						container = this.$.errorContainer;
+						scrollTo = 192;
+
+						break;
+				}
+				this._setHeight(container, scroll?scrollTo:-2, scrollCompensate||(scrollTo!==0));
 			},
 
 			/**
 			 * Private functions
 			 */
-			_setHeight(container) {
+			_setHeight(container, scrollTo=-1, scrollCompensate=false) {
+				if(!container)
+					return;
 				container.style.visibility = 'hidden';
 				container.style.position = 'absolute';
-				this._height = container.offsetHeight;
+				var height = container.offsetHeight;
+				if(scrollCompensate)
+					height = Math.max(height, window.pageYOffset+window.innerHeight-192);
+				this._height = height;
 				container.style.position = '';
 				container.style.visibility = '';
-				Polymer.dom(document.body).querySelector('#app').scroll(192);
+				if(scrollTo >= 0)
+					Polymer.dom(document.body).querySelector('#app').scroll(scrollTo);
 			},
 
 			_isEmptyString: function(str) {
 				return str === '';
 			},
 
+			_computeMainEmpty: function(state) {
+				return state == 0;
+			},
+
 			/**
 			 * Property observers
 			 */
-			_dataChanged: function(data) {
-				if(data === null) {
+			_messageChanged: function(message) {
+				if(!message) {
 					if(this._state === 1)
 						this._set_state(0);
 				}
@@ -149,29 +197,26 @@
 					this._set_state(1);
 			},
 
-			_errorChanged: function(error) {
-				if(error === '') {
+			_dataChanged: function(data) {
+				if(!data) {
 					if(this._state === 2)
-						this._set_state(0);
+						this._set_state(this.message ? 1 : 0);
 				}
 				else
 					this._set_state(2);
 			},
 
-			_stateChanged: function(state) {
-				var container;
-				switch(state) {
-					case 0:
-						this._height = 0;
-						return;
-					case 1:
-						this.$.list.render();
-						this._setHeight(this.$.dataContainer);
-						break;
-					case 2:
-						this._setHeight(this.$.errorContainer);
-						break;
+			_errorChanged: function(error) {
+				if(!error) {
+					if(this._state === 3)
+						this._set_state(0);
 				}
+				else
+					this._set_state(3);
+			},
+
+			_stateChanged: function(state) {
+				this.resetHeight(state, true, true);
 			},
 
 			_computeMessage: function(data) {
@@ -184,6 +229,13 @@
 				if(data !== null && 'statuses' in data)
 					return data.statuses;
 				return [];
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleScrollFinished: function() {
+				this.resetHeight();
 			},
 		});
 	</script>

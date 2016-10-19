@@ -58,7 +58,7 @@
 					readOnly: true,
 				},
 
-				searchId: {
+				queryId: {
 					type: String,
 					value: '',
 					notify: true,
@@ -74,8 +74,15 @@
 			 * Public functions
 			 */
 			makeQuery: function() {
-				this.$.list.clear();
 				this.$.ajax.makeQuery();
+			},
+
+			clear: function() {
+				this.$.list.clear();
+			},
+
+			resetHeight: function() {
+				this.$.list.resetHeight();
 			},
 
 			/**
@@ -88,16 +95,16 @@
 				if(!this.$.ajax.error) {
 					this.$.list.error = '';
 					this.$.list.message = results.message || '';
-					this.$.list.data = results.data || {};
-					this._setSuccess(true);
-					this._setSearchId(results.data.id);
+					this.$.list.data = results.data || null;
+					this._setSuccess('data' in results);
+					this._setQueryId(this.success ? results.data.id : '');
 				}
 				else {
 					this.$.list.data = null;
 					this.$.list.message = '';
 					this.$.list.error = results.error || 'Error';
 					this._setSuccess(false);
-					this._setSearchId('');
+					this._setQueryId('');
 					console.log(results.error);
 				}
 			},

@@ -149,32 +149,20 @@
 
       #downloadLink {
         margin: 0 8px;
-        opacity: 1;
-        visibility: visible;
         text-decoration: none;
         color: rgba(0,0,0,0.9);
-        -webkit-transition: opacity 0.2s linear, visibility 0s linear 0s;
-        -moz-transition: opacity 0.2s linear, visibility 0s linear 0s;
-        -o-transition: opacity 0.2s linear, visibility 0s linear 0s;
-        transition: opacity 0.2s linear, visibility 0s linear 0s;
-      }
-      #downloadLink[hide] {
-        opacity: 0;
-        visibility: hidden;
-        -webkit-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
-        -moz-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
-        -o-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
-        transition: opacity 0.2s linear, visibility 0s linear 0.2s;
       }
       #download {
         height: 48px;
         margin: 0;
-        background: var(--accent2-color, #fff);
         --paper-button: {
           min-width: initial;
           width: 88px;
           padding: 8px 8px;
         }
+      }
+      #download:not([disabled]) {
+         background: var(--accent2-color, #fff);
       }
 
       .search-tool-container {
@@ -203,10 +191,12 @@
       <app-header id="searchHeader" condenses fixed effects="blend-background">
 
         <app-toolbar class="search-toolbar">
-          <a download target="_blank" id="downloadLink" hide$="[[!success]]" href$="[[_computeDownloadLink(searchId)]]"><paper-button id="download">
-            <iron-icon icon="file-download"></iron-icon>
-            <span>zip</span>
-          </paper-button></a>
+          <a download target="_blank" id="downloadLink" href$="[[_computeDownloadLink(queryId,success)]]">
+            <paper-button id="download" disabled="[[!success]]">
+              <iron-icon icon="file-download"></iron-icon>
+              <span>zip</span>
+            </paper-button>
+          </a>
           <div class="search-container">
             <query-search-bar id="searchBar" placeholder="Enter your query here"></query-search-bar>
           </div>
@@ -231,7 +221,7 @@
 
 
       <div class="main-container">
-        <query-main id="main" success="{{success}}" search-id="{{searchId}}" limit="[[limit]]"></query-main>
+        <query-main id="main" success="{{success}}" query-id="{{queryId}}" limit="[[limit]]"></query-main>
       </div>
     </app-header-layout>
 
@@ -278,9 +268,6 @@
       }, 
 
       ready: function() {
-        // Set defaults
-        this.scrollId = null;
-
         // Set settings overlay defaults
         var overlay = this.$.settingsOverlay;
         overlay.positionTarget = this.$.settings;
@@ -318,9 +305,11 @@
       },
 
       search: function(query) {
-        this.$.main.query = query;
+        var main = this.$.main;
+        main.query = query;
+        main.clear();
         this.scrollToTop();
-        this.$.main.makeQuery();
+        main.makeQuery();
       },
 
       scrollToTop: function() {
@@ -328,7 +317,7 @@
       },
 
       scroll: function(top) {
-        if(this.scrollId !== null) {
+        if(this.scrollId !== undefined) {
           clearInterval(this.scrollId);
         }
         var easeOut = function(t, cur, diff, dur) { // Ripped from Polymer's paper-scroll-header-panel `scroll` function
@@ -339,6 +328,7 @@
           t = Date.now() - start;
           if(t > dur) {
             window.scrollTo(left, top);
+            this.fire('scroll-finished');
             clearInterval(this.scrollId);
           }
           else {
@@ -360,18 +350,25 @@
        */
       _setLocationParams: function(query, limit) {
         var params = {};
-        if(query !== '')
+        if(query !== '') {
           params['q'] = query;
-        if(limit > 0)
-          params['limit'] = limit;
+          if(limit > 0)
+            params['limit'] = limit;
+          else
+            params['limit'] = null;
+        }
+        else {
+          params['q'] = null;
+          params['limit'] = null;
+        }
         this.$.location.queryParams = params;
       },
 
       /**
        * Compute functions
        */
-      _computeDownloadLink: function(searchId) {
-        if(searchId !== '')
+      _computeDownloadLink: function(searchId, success) {
+        if(success && searchId !== '')
           return 'http://hub.sammusicbiz.com/query/'+searchId+'/download';
         return '';
       },
@@ -380,7 +377,7 @@
        * Event handlers
        */
       _handleTitleTap: function() {
-        this.scroll(0);
+        this.scrollToTop();
       },
 
       _handleSearchEnter: function(e) {
