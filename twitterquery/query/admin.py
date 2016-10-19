@@ -64,7 +64,7 @@ class TwitterUserAdmin(admin.ModelAdmin):
 	)
 
 class StatusAdmin(admin.ModelAdmin):
-	list_display = ('status_id', 'created_by', 'created_at')
+	list_display = ('status_id', 'photo_count', 'created_by', 'created_at')
 	search_fields = ['created_by__screen_name', 'created_by__name', 'status_id', 'text']
 	list_filter = ('created_at',)
 	fieldsets = (
@@ -73,6 +73,9 @@ class StatusAdmin(admin.ModelAdmin):
 		}),
 	)
 	inlines = [PhotoInline, SearchStatusThroughInline]
+
+	def photo_count(self, obj):
+		return obj.photos.count()
 
 class PhotoAdmin(admin.ModelAdmin):
 	list_display = ('photo_id', 'status', 'photo_url')

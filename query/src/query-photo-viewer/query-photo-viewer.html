@@ -1,12 +1,15 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
 
 <link rel="import" href="../../bower_components/neon-animation/neon-animated-pages.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/slide-left-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/slide-from-left-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/slide-right-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/slide-from-right-animation.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
 
 <link rel="import" href="../query-photo/query-photo.html">
 
@@ -17,7 +20,7 @@
 				display: block;
 				overflow: hidden;
 				/*border: solid 1px rgba(0,0,0,0.1);*/
-				border-radius: 3px;
+				border-radius: 8px;
 				position: relative;
 			}
 			:host([empty]) {
@@ -58,9 +61,35 @@
 				@apply(--layout-end-justified);
 				right: 0;
 			}
+
+			#countDropdown {
+				@apply(--paper-font-body2);
+				@apply(--layout-horizontal);
+				@apply(--layout-center-center);
+				height: 48px;
+				width: 64px;
+				background-color: rgba(0,0,0,0.4);
+				color: #fff;
+				position: absolute;
+				left: 0;
+				top: -64px;
+				-webkit-transition: top 0.2s ease-in-out;
+				-moz-transition: top 0.2s ease-in-out;
+				-o-transition: top 0.2s ease-in-out;
+				transition: top 0.2s ease-in-out;
+			}
+			:host(:hover) #countDropdown {
+				top: 0;
+			}
+			#countDropdown[hidden] {
+				display: none;
+			}
+			#countDropdown span {
+				margin: 0 2px;
+			}
 		</style>
 
-		<neon-animated-pages 	id="pages" style$="[[_computePagesStyle(photos)]]" 
+		<neon-animated-pages 	id="pages" style$="[[_computePagesStyle(photos)]]"  fallback-selection="0"
 								selected="{{selected}}" selected-attribute="active" selectable="query-photo"
 								entry-animation="[[_computeEntryAnimtion(_right)]]" exit-animation="[[_computeExitAnimtion(_right)]]">
 		    <template is="dom-repeat" items="[[photos]]">
@@ -77,6 +106,11 @@
 		</div>
 		<div id="rightController" class="controller">
 			<iron-icon icon="chevron-right"></iron-icon>
+		</div>
+		<div id="countDropdown" hidden$="[[_computeCountHidden(photos)]]">
+			<span>[[_getIndex()]]</span>
+			<span>/</span>
+			<span>[[_computeCount(photos)]]</span>
 		</div>
 		
 	</template>
@@ -119,13 +153,24 @@
 			],
 
 			/**
+			 * Private functions
+			 */
+			_getIndex: function() {
+				var pages = this.$.pages;
+				var item = pages.selectedItem;
+				if(item)
+					return pages.indexOf(item);
+				return -1;
+			},
+
+			/**
 			 * Property observers
 			 */
 			_setControllerUsability: function(photos, selected) {
 				var leftDisabled = true;
 				var rightDisabled = true;
-				var item = this.$.pages.selectedItem;
-				if(item && photos && photos.length > 0) {
+				var index = this._getIndex();
+				if(index >= 0 && photos && photos.length > 0) {
 					var index = this.$.indexOf(item);
 					if(index > 0)
 						leftDisabled = false;
@@ -159,6 +204,16 @@
 
 			_computeExitAnimtion: function(right) {
 				return right ? 'slide-left-animation' : 'slide-right-animation';
+			},
+
+			_computeCountHidden: function(photos) {
+				return !photos || photos.length <= 1;
+			},
+
+			_computeCount: function(photos) {
+				if(photos)
+					return photos.length;
+				return '';
 			},
 		});
 	</script>
