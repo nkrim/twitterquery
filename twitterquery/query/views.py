@@ -221,32 +221,13 @@ def query(request):
 	instance.refresh_from_db(fields=('search',))
 	instance.success = True
 	instance.save()
-	return makeJsonResponse({
-			'success': True,
-			'data': {
-				'id': instance.pk,
-				'query': instance.query,
-				'limit': instance.limit,
-				'time_of': instance.time_of,
-				'success': instance.success,
-				'statuses': StatusSerializer(instance.statuses(), many=True).data,
-			}
-		})
+	return makeJsonResponse(QueryInstanceSerializer(instance).data)
 
 def get(request, query_pk):
 	instance = get_object_or_404(QueryInstance, pk=query_pk)
-
 	# Save search object to update access time
 	instance.search.save()
-
-	return makeJsonResponse({
-			'id': instance.pk,
-			'query': instance.query,
-			'limit': instance.limit,
-			'time_of': instance.time_of,
-			'success': instance.success,
-			'statuses': StatusSerializer(instance.statuses(), many=True).data,
-		})
+	return makeJsonResponse(QueryInstanceSerializer(instance).data)
 
 def download(request, query_pk):
 	# HELPER FUNCTIONS FOR DOWNLOAD

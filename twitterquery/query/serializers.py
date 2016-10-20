@@ -30,3 +30,10 @@ class SearchSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Search
 		exclude = ('statuses',)
+
+class QueryInstanceSerializer(serializers.ModelSerializer):
+	statuses = StatusSerializer(many=True)
+
+	class Meta:
+		model = QueryInstance
+		exclude = ('search',)

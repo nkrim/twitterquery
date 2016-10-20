@@ -58,7 +58,7 @@ class Search(models.Model):
 		return '{}:{} [{},{}]'.format(unquote_plus(self.query), self.pk, self.max_id, self.min_id)
 
 	class Meta:
-		ordering = ['query', '-max_id']
+		ordering = ['-max_id']
 		verbose_name_plural = 'Searches'
 
 class QueryInstance(models.Model):
