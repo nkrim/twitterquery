@@ -117,8 +117,7 @@ def query(request):
 																			'created_at': datetime.strptime(p['created_at'],'%a %b %d %X %z %Y'),
 																			'text': p['text']
 																		})
-				status.searches.add(search)
-				status.save()
+				search.statuses.add(status)
 				if status_created:
 					media = p['media']
 					for m in media:
@@ -127,13 +126,13 @@ def query(request):
 							size = sizes.get('large') or sizes.get('medium') or sizes.get('small') or sizes.get('thumb') or {'w': 0, 'h': 0}
 						else:
 							size = {'w': 0, 'h': 0}
-						Photo.objects.get_or_create(photo_id=m['id'],
-													defaults={ 
-														'photo_url': m['media_url'], 
-														'height': size['h'],
-														'width': size['w'],
-														'status': status,
-													})
+						photo, photo_created = Photo.objects.get_or_create(	photo_id=m['id'],
+																			defaults={ 
+																				'photo_url': m['media_url'], 
+																				'height': size['h'],
+																				'width': size['w'],
+																			})
+						status.photos.add(photo)
 		except Exception as e:
 			# Cleanup to make sure no useless search is kept if it fails during construction
 			for s in search.statuses.all():
@@ -200,7 +199,7 @@ def query(request):
 		search.save()
 
 	# Repeat and iterate until the limit is reached or no more posts can be found
-	while search.statuses.count() < instance.limit:
+	while instance.statuses().count() < instance.limit:
 		# Perform search
 		success, results = perform_search(auth, instance.query, search.min_id-1)
 		if not success:
@@ -231,25 +230,34 @@ def get(request, query_pk):
 
 def download(request, query_pk):
 	# HELPER FUNCTIONS FOR DOWNLOAD
-	def zip_and_stream_photos(photos):
+	def zip_and_stream_photos(inst):
 		z = zipstream.ZipFile(mode='w')
-		errors = ''
-		for screen_name, status_id, url in photos:
+		status_ids = list(inst.statuses().values_list('status_id', flat=True))
+		photos = list(inst.photos())
+		info = ['query_id: {}'.format(inst.pk), 'time of: {}'.format(inst.time_of), 'query: {}'.format(inst.query), 'limit: {}'.format(inst.limit),
+				'status count: {}'.format(len(status_ids)), 'photo count: {}'.format(len(photos))]
+		errors = []
+		for p in photos:
 			try:
-				filename = '{}@{}.{}'.format(status_id, screen_name, url.rpartition('.')[2])
-				response = urlopen(url)
+				filename = '{}.{}'.format(p, p.photo_url.rpartition('.')[2])
+				response = urlopen(p.photo_url)
 			except Exception as e:
-				errors += filename+'\n'
+				errors.append('{}: {}'.format(filename, e))
 			else:
-				z.writestr(filename,response.read())
-		if errors != '': 
-			z.writestr('errors.txt', errors)
+				z.writestr(filename, response.read())
+				photo_statuses = list(p.statuses.filter(status_id__in=status_ids))
+				info.append('{}: {} status{} from this query'.format(filename, len(photo_statuses), 'es' if len(photo_statuses) != 1 else ''))
+				for s in photo_statuses:
+					info.append('\t{} - {}'.format(s, s.status_url()))
+		z.writestr('info.txt', '\n'.join(info).encode())
+		if errors: 
+			z.writestr('errors.txt', '\n'.join(errors).encode())
 		return z
 	# Get search object
 	instance = get_object_or_404(QueryInstance, pk=query_pk)
 
 	# Zip and stream pictures
-	z = zip_and_stream_photos(instance.statuses().values_list('created_by__screen_name','photo','photo__photo_url'))
+	z = zip_and_stream_photos(instance)
 
 	# Save search object to update access time
 	instance.search.save()

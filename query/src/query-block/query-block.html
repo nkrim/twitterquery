@@ -1,8 +1,10 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
 
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 
 <link rel="import" href="../query-photo-viewer/query-photo-viewer.html">
@@ -47,10 +49,23 @@
 
 			}
 
-			.profile-image {
+			.profile-image-container {
+				position: relative;
 				height: 56px;
 				width: 56px;
+			}
+			.profile-image {
+				height: 100%;
+				width: 100%;
 				border-radius: 28px;
+			}
+			.profile-image-spinner {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				margin: auto;
 			}
 
 			.name-container span {
@@ -110,7 +125,10 @@
 		
 		<div class="block-header">
 			<a class="user-link" target="_blank" href$="[[_computeUserLink(user)]]">
-				<img class="profile-image" src$="[[_computeUserProfileImage(user)]]"/>			
+				<div class="profile-image-container">
+					<iron-image class="profile-image" src="[[_computeUserProfileImage(user)]]" loading="{{profileImageLoading}}"></iron-image>
+					<paper-spinner-lite class="profile-image-spinner" active="[[profileImageLoading]]"></paper-spinner-lite>
+				</div>
 				<div class="name-container">
 					<span id="name">[[_computeUserName(user)]]</span>
 					<span id="screenName">[[_computeUserScreenName(user)]]</span>

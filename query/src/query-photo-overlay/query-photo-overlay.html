@@ -100,7 +100,7 @@
 			}
 		</style>
 		
-		<neon-animated-pages 	id="pages" style$="[[_computePagesStyle(photos)]]"  fallback-selection="0"
+		<neon-animated-pages 	id="pages" style$="[[_computePagesStyle(_maxHeight, _maxWidth)]]"  fallback-selection="0"
 								selected="{{selected}}" selected-attribute="active" selectable="query-photo" selected-item="{{selectedItem}}"
 								entry-animation="[[_computeEntryAnimtion(_right)]]" exit-animation="[[_computeExitAnimtion(_right)]]">
 		    <template is="dom-repeat" items="[[photos]]">
@@ -191,11 +191,13 @@
 				return this.$.pages.indexOf(item);
 			},
 
-			_setControllerUsability: function() {
+			_setControllerUsability: function(items) {
+				if(!items)
+					items = this.$.pages.items;
 				var leftDisabled = true;
 				var rightDisabled = true;
 				var index = this._getIndex();
-				var length = this.$.pages.items.length;
+				var length = items.length;
 				if(index >= 0 && length > 0) {
 					if(index > 0)
 						leftDisabled = false;
@@ -204,6 +206,45 @@
 				}
 				this.toggleAttribute('disabled', leftDisabled, this.$.leftController);
 				this.toggleAttribute('disabled', rightDisabled, this.$.rightController);
+			},
+
+			_setMaxHeightWidth: function(items) {
+				if(!items)
+					items = this.$.pages.items;
+				var height = this.offsetHeight;
+				var width = this.offsetWidth;
+				var maxHeight = null;
+				var maxWidth = null;
+				items.forEach(function(p) {
+					if(p.height && p.width) {
+						if(p.height >= height && p.width >= width) {
+							var heightRatio = height/p.height;
+							var widthRatio = width/p.width;
+							if(heightRatio <= widthRatio) {
+								maxHeight = height;
+								maxWidth = Math.max(maxWidth, width*heightRatio);
+							}
+							else {
+								maxHeight = Math.max(maxHeight, height*widthRatio);
+								maxWidth = width;
+							}
+						}
+						else if(p.height >= height) {
+							maxHeight = height;
+							maxWidth = Math.max(maxWidth, p.width*height/p.height);
+						}
+						else if(p.width >= width) {
+							maxHeight = Math.max(maxHeight, p.height*width/p.width);
+							maxWidth = width;
+						}
+						else {
+							maxHeight = Math.max(maxHeight, p.height);
+							maxWidth = Math.max(maxWidth, p.width)
+						}
+					}
+				});
+				this._maxHeight = maxHeight || null;
+				this._maxWidth = maxWidth || null;
 			},
 
 			/**
@@ -234,42 +275,13 @@
 				return !photos || photos.length == 0;
 			},
 
-			_computePagesStyle: function(photos) {
-				var height = this.offsetHeight;
-				var width = this.offsetWidth;
-				var maxHeight = null;
-				var maxWidth = null;
-				photos.forEach(function(p) {
-					if(p.height && p.width) {
-						if(p.height >= height && p.width >= width) {
-							var heightRatio = height/p.height;
-							var widthRatio = width/p.width;
-							if(heightRatio <= widthRatio) {
-								maxHeight = height;
-								maxWidth = Math.max(maxWidth, width*heightRatio);
-							}
-							else {
-								maxHeight = Math.max(maxHeight, height*widthRatio);
-								maxWidth = width;
-							}
-						}
-						else if(p.height >= height) {
-							maxHeight = height;
-							maxWidth = Math.max(maxWidth, p.width*height/p.height);
-						}
-						else if(p.width >= width) {
-							maxHeight = Math.max(maxHeight, p.height*width/p.width);
-							maxWidth = width;
-						}
-						else {
-							maxHeight = Math.max(maxHeight, p.height);
-							maxWidth = Math.max(maxWidth, p.width)
-						}
-					}
-				});
-				this._maxHeight = maxHeight || null;
-				this._maxWidth = maxWidth || null;
-				return "height: "+height+"px; width: "+width+"pk;";
+			_computePagesStyle: function(maxHeight, maxWidth) {
+				var style = '';
+				if(maxHeight)
+					style += 'height:'+maxHeight+'px;';
+				if(maxWidth)
+					style += 'width:'+maxWidth+'px;';
+				return style;
 			},
 
 			_computeEntryAnimtion: function(right) {

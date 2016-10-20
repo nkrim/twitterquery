@@ -32,14 +32,26 @@
 				width: 100%;
 			}
 
+			.controller-container {
+				@apply(--layout-horizontal);
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+			}
+
 			.controller {
+				height: 100%;
+				cursor: pointer;
+			}
+			.controller[disabled] {
+				visibility: hidden;
+			}
+			.selection-controller {
 				@apply(--layout-horizontal);
 				@apply(--layout-center);
 				width: 96px;
-				position: absolute;
-				top: 0;
-				bottom: 0;
-				cursor: pointer;
 				opacity: 1;
 				visibility: visible;
 				-webkit-transition: opacity 0.2s linear, visibility 0s linear 0s;
@@ -47,15 +59,17 @@
 				-o-transition: opacity 0.2s linear, visibility 0s linear 0s;
 				transition: opacity 0.2s linear, visibility 0s linear 0s;
 			}
-			.controller[disabled] {
+			.selection-controller[disabled] {
+				position: absolute;
+				top: 0;
+				bottom: 0;
 				opacity: 0;
-				visibility: hidden;
 				-webkit-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
 				-moz-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
 				-o-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
 				transition: opacity 0.2s linear, visibility 0s linear 0.2s;
 			}
-			.controller iron-icon {
+			.selection-controller iron-icon {
 				color: rgba(255,255,255,0.3);
 				--iron-icon-height: 64px;
 				--iron-icon-width: 64px;
@@ -65,17 +79,24 @@
 				-o-transition: color 0.2s linear;
 				transition: color 0.2s linear;
 			}
-			.controller:hover iron-icon {
+			.selection-controller:hover iron-icon {
 				color: rgba(255,255,255,1);
 			}
 
 			#leftController {
 				@apply(--layout-start-justified);
+			}
+			#leftController[disabled]{
 				left: 0;
 			}
 			#rightController {
 				@apply(--layout-end-justified);
+			}
+			#rightController[disabled] {
 				right: 0;
+			}
+			#centerController {
+				@apply(--layout-flex);
 			}
 
 			#countDropdown {
@@ -107,7 +128,7 @@
 			}
 		</style>
 
-		<neon-animated-pages 	id="pages" style$="[[_computePagesStyle(photos)]]"  fallback-selection="0"
+		<neon-animated-pages 	id="pages" style$="[[_computePagesStyle(_height)]]"  fallback-selection="0"
 								selected="{{selected}}" selected-attribute="active" selectable="query-photo" selected-item="{{selectedItem}}"
 								entry-animation="[[_computeEntryAnimtion(_right)]]" exit-animation="[[_computeExitAnimtion(_right)]]">
 		    <template is="dom-repeat" items="[[photos]]">
@@ -121,17 +142,24 @@
 		    				</query-photo>
 		    </template>
 		</neon-animated-pages>
-		<div id="leftController" class="controller">
-			<iron-icon icon="chevron-left"></iron-icon>
-		</div>
-		<div id="rightController" class="controller">
-			<iron-icon icon="chevron-right"></iron-icon>
+		<div class="controller-container">
+			<div id="leftController" class="controller selection-controller">
+				<iron-icon icon="chevron-left"></iron-icon>
+			</div>
+			<div id="centerController" class="controller">
+				
+			</div>
+			<div id="rightController" class="controller selection-controller">
+				<iron-icon icon="chevron-right"></iron-icon>
+			</div>
 		</div>
 		<div id="countDropdown" hidden$="[[_computeCountHidden(photos)]]">
 			<span class="count-number count-index">[[_computeCountIndex(selectedItem)]]</span>
 			<span>/</span>
 			<span class="count-number count-total">[[_computeCountTotal(photos)]]</span>
 		</div>
+
+		<query-photo-overlay id="overlay" photos="[[photos]]" selected="{{selected}}"></query-photo-overlay>
 		
 	</template>
 	<script>
@@ -176,13 +204,20 @@
 					value: false,
 					readOnly: true,
 				},
+
+				_height: {
+					type: Number,
+					value: null,
+				},
 			},
 
 			listeners: {
 				'pages.iron-select': '_handlePagesSelect',
 				'pages.iron-items-changed': '_handlePagesItemsChanged',
+				'loaded-changed': '_handlePhotoLoadedChanged',
 				'leftController.tap': '_handleLeftControllerTap',
 				'rightController.tap': '_handleRightControllerTap',
+				'centerController.tap': '_handleCenterControllerTap',
 			},
 
 			/**
@@ -200,19 +235,35 @@
 				return this.$.pages.indexOf(item);
 			},
 
-			_setControllerUsability: function() {
+			_setControllerUsability: function(items) {
+				if(!items)
+					items = this.$.pages.items;
 				var leftDisabled = true;
 				var rightDisabled = true;
+				var centerDisabled = true;
 				var index = this._getIndex();
-				var length = this.$.pages.items.length;
+				var length = items.length;
 				if(index >= 0 && length > 0) {
 					if(index > 0)
 						leftDisabled = false;
 					if(index < length-1)
 						rightDisabled = false;
+					if(items[index].loaded)
+						centerDisabled = false;
 				}
 				this.toggleAttribute('disabled', leftDisabled, this.$.leftController);
 				this.toggleAttribute('disabled', rightDisabled, this.$.rightController);
+				this.toggleAttribute('disabled', centerDisabled, this.$.centerController);
+			},
+
+			_setViewerHeight: function(items) {
+				var width = this.offsetWidth;
+				var maxHeight = 0;
+				items.forEach(function(p) {
+					if(p.height && p.width)
+						maxHeight = Math.max(maxHeight, p.height*width/p.width);
+				});
+				this._height = Math.min(maxHeight, this.maxHeight||window.Infinity) || null;
 			},
 
 			/**
@@ -222,7 +273,14 @@
 				this._setControllerUsability();
 			},
 
-			_handlePagesItemsChanged: function() {
+			_handlePagesItemsChanged: function(e) {
+				var items = this.$.pages.items;
+				this._setControllerUsability(items);
+				this._setViewerHeight(items);
+			},
+
+			_handlePhotoLoadedChanged: function(e) {
+				console.log(e);
 				this._setControllerUsability();
 			},
 
@@ -236,6 +294,10 @@
 				this.$.pages.selectNext();
 			},
 
+			_handleCenterControllerTap: function() {
+				this.$.overlay.open();
+			},
+
 			/**
 			 * Computed functions
 			 */
@@ -243,15 +305,10 @@
 				return !photos || photos.length == 0;
 			},
 
-			_computePagesStyle: function(photos) {
-				var width = this.offsetWidth;
-				var maxHeight = 0;
-				photos.forEach(function(p) {
-					if(p.height && p.width)
-						maxHeight = Math.max(maxHeight, p.height*width/p.width);
-				});
-				var height = Math.min(maxHeight, this.maxHeight);
-				return "height: "+height+"px;";
+			_computePagesStyle: function(height) {
+				if(height !== null)
+					return "height: "+height+"px;";
+				return '';
 			},
 
 			_computeEntryAnimtion: function(right) {

@@ -1,17 +1,18 @@
 from django.contrib import admin
 from .models import *
 
+from django.db.models.aggregates import *
+
 # Inlines
 # -------------------------
 class SearchStatusThroughInline(admin.StackedInline):
 	model = Search.statuses.through
 	extra = 0
+	readonly_fields = ('status','search')
 
-class PhotoInline(admin.TabularInline):
-	model = Photo
-	fields = ('photo_id', 'photo_url', ('height', 'width'))
+class StatusPhotoThroughInline(admin.TabularInline):
+	model = Status.photos.through
 	extra = 0
-	verbose_name_plural = 'Photos'
 
 # Admin Models
 # -------------------------
@@ -25,7 +26,7 @@ class AuthAdmin(admin.ModelAdmin):
 	readonly_fields = ('bearer',)
 
 class QueryInstanceAdmin(admin.ModelAdmin):
-	list_display = ('pk', 'query', 'limit', 'max_id', 'time_of')
+	list_display = ('pk', 'query', 'limit', 'status_count', 'photo_count', 'max_id', 'time_of')
 	list_display_linkes = ('pk', 'query')
 	search_fields = ['query']
 	list_filter = ('time_of',)
@@ -36,8 +37,14 @@ class QueryInstanceAdmin(admin.ModelAdmin):
 	)
 	readonly_fields = ('pk', 'time_of')
 
+	def status_count(self, obj):
+		return obj.statuses().count()
+
+	def photo_count(self, obj):
+		return obj.photos().count()
+
 class SearchAdmin(admin.ModelAdmin):
-	list_display = ('pk', 'query', 'status_count', 'max_id', 'min_id', 'last_accessed')
+	list_display = ('pk', 'query', 'status_count', 'photo_count', 'max_id', 'min_id', 'last_accessed')
 	list_display_links = ('pk', 'query')
 	search_fields = ['query']
 	fieldsets = (
@@ -50,6 +57,9 @@ class SearchAdmin(admin.ModelAdmin):
 
 	def status_count(self, obj):
 		return obj.statuses.count()
+
+	def photo_count(self, obj):
+		return Photo.objects.prefetch_related('status__search').filter(status__search=obj).distinct().count()
 
 class TwitterUserAdmin(admin.ModelAdmin):
 	list_display = ('screen_name', 'name', 'user_id')
@@ -72,19 +82,23 @@ class StatusAdmin(admin.ModelAdmin):
 			'fields': ('status_id', 'created_by', 'created_at', 'text')
 		}),
 	)
-	inlines = [PhotoInline, SearchStatusThroughInline]
+	inlines = [StatusPhotoThroughInline, SearchStatusThroughInline]
 
 	def photo_count(self, obj):
 		return obj.photos.count()
 
 class PhotoAdmin(admin.ModelAdmin):
-	list_display = ('photo_id', 'status', 'photo_url')
+	list_display = ('photo_id', 'status_count', 'photo_url')
 	search_fields = ['photo_id', 'status__status_id', 'status__created_by__screen_name', 'status__created_by__name']
 	fieldsets = (
 		(None, {
-			'fields': ('status', 'photo_id', 'photo_url', ('height', 'width'))
+			'fields': ('photo_id', 'photo_url', ('height', 'width'))
 		}),
 	)
+	inlines = [StatusPhotoThroughInline]
+
+	def status_count(self, obj):
+		return obj.statuses.count()
 
 # Registering Admin Models
 # -------------------------

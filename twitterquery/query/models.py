@@ -3,6 +3,8 @@ from django.db import models
 
 from urllib.parse import unquote_plus
 
+BASE_URL = 'https://twitter.com'
+
 class Authentication(models.Model):
 	# Value fields
 	key = models.CharField(max_length=500)
@@ -23,8 +25,30 @@ class TwitterUser(models.Model):
 	def user_id_str(self):
 		return str(self.user_id)
 
+	def user_url(self):
+		return '{}/{}'.format(BASE_URL, self.screen_name)
+
 	def __str__(self):
 		return '@'+self.screen_name
+
+	class Meta:
+		ordering = ['screen_name']
+
+class Photo(models.Model):
+	# Value fields
+	photo_id = models.BigIntegerField(primary_key=True)
+	photo_url = models.URLField()
+	height = models.PositiveIntegerField()
+	width = models.PositiveIntegerField()
+
+	def photo_id_str(self):
+		return str(self.photo_id)
+
+	def __str__(self):
+		return self.photo_id_str()
+
+	class Meta:
+		ordering = ['photo_id']
 
 class Status(models.Model):
 	# Value fields
@@ -33,9 +57,13 @@ class Status(models.Model):
 	text = models.CharField(max_length=200)
 	# Model relations
 	created_by = models.ForeignKey(TwitterUser, on_delete=models.CASCADE, related_name='statuses', related_query_name='status')
+	photos = models.ManyToManyField(Photo, related_name='statuses', related_query_name='status')
 
 	def status_id_str(self):
 		return str(self.status_id)
+
+	def status_url(self):
+		return '{}/status/{}'.format(self.created_by.user_url(), self.status_id_str())
 
 	def __str__(self):
 		return '{}:{}'.format(self.created_by, self.status_id)
@@ -72,26 +100,19 @@ class QueryInstance(models.Model):
 	# Model relations
 	search = models.ForeignKey(Search, on_delete=models.CASCADE, related_name='instances', related_query_name='instance')
 
+	def min_id(self):
+		statuses = self.statuses()
+		return statuses.last().status_id if statuses.count() > 0 else 0
+
 	def statuses(self):
 		return self.search.statuses.filter(status_id__lte=self.max_id)[:self.limit] if self.success else Status.objects.none()
 
+	def photos(self):
+		statuses = list(self.statuses())
+		return Photo.objects.prefetch_related('statuses').filter(status__in=statuses).distinct()
+
 	def __str__(self):
-		return '{} {}'.format(unquote_plus(self.query), self.time_of.strftime('%Y-%m-%d %H:%M:%S'))
+		return '{} {}'.format(unquote_plus(self.query), self.time_of.strftime('%Y-%m-%d %H.%M.%S'))
 
 	class Meta:
 		ordering = ['-time_of']
-
-class Photo(models.Model):
-	# Value fields
-	photo_id = models.BigIntegerField(primary_key=True)
-	photo_url = models.URLField()
-	height = models.PositiveIntegerField()
-	width = models.PositiveIntegerField()
-	# Model relations
-	status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='photos', related_query_name='photo')
-
-	def photo_id_str(self):
-		return str(self.photo_id)
-
-	class Meta:
-		ordering = ['status', 'photo_id']

@@ -26,9 +26,15 @@ class Command(BaseCommand):
 		parser.add_argument('-m', '--merge',
 							action='store_true',
 							help='If present, forces a check on search entries and merges and overlapping ones. This action is performed before all actions except a full delete from the `-a` flag')
+		parser.add_argument('-M', '--mergeonly',
+							action='store_true',
+							help='If present, performs a merge, and only performs a merge. This has precedence over even the `-a` flag option.')
 
 	def handle(self, *args, **options):
-		if options['all']:
+		if options['mergeonly']:
+			merge()
+			return
+		elif options['all']:
 			print('Deleting all search entries')
 			count, deleted = Search.objects.all().delete()
 			print('Search cleaning completed\n\t'+str(count)+' searches deleted')
@@ -59,7 +65,10 @@ class Command(BaseCommand):
 					print('Search cleaning completed\n\t'+str(count)+' searches deleted')
 		print('Finding all statuses with no related searches')
 		count, deleted = Status.objects.filter(search__isnull=True).delete()
-		print('Status cleaning completed\n\t'+str(deleted.get('query.Status',0))+' statuses deleted\n\t'+str(deleted.get('query.Photo',0))+' photos deleted')
+		print('Status cleaning completed\n\t'+str(count)+' statuses deleted')
+		print('Finding all photos with no related statuses')
+		count, deleted = Photo.objects.filter(status__isnull=True).delete()
+		print('Photo cleaning completed\n\t'+str(count)+' photos deleted')
 		print('Finding all twitter users with no related statuses')
 		count, deleted = TwitterUser.objects.filter(status__isnull=True).delete()
 		print('Twitter User cleaning completed\n\t'+str(count)+' users deleted')
@@ -68,6 +77,7 @@ def merge():
 	queries = {}
 	for s in Search.objects.all():
 		q = s.query
+		print(q)
 		if not q in queries:
 			queries[q] = []
 		queries[q].append(s)

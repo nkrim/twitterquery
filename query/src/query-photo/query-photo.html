@@ -17,18 +17,8 @@
 				height: 100%;
 			}
 
-			#spinner {
-				position: absolute;
-				top: 0;
-				left: 0;
-				bottom: 0;
-				right: 0;
-				margin: auto;
-				--paper-spinner-color: #fff;
-			}
-
-			#retryOverlay {
-				@apply(--layout-horizontal)
+			.icon-overlay {
+				@apply(--layout-horizontal);
 				@apply(--layout-center-center);
 				position: absolute;
 				top: 0;
@@ -36,7 +26,26 @@
 				bottom: 0;
 				right: 0;
 				background-color: rgba(0,0,0,0.3);
+				opacity: 0;
+				visibility: hidden;
+				-webkit-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
+				-moz-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
+				-o-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
+				transition: opacity 0.2s linear, visibility 0s linear 0.2s;
 			}
+			.icon-overlay[show] {
+				opacity: 1;
+				visibility: visible;
+				-webkit-transition: opacity 0.2s linear, visibility 0s linear 0s;
+				-moz-transition: opacity 0.2s linear, visibility 0s linear 0s;
+				-o-transition: opacity 0.2s linear, visibility 0s linear 0s;
+				transition: opacity 0.2s linear, visibility 0s linear 0s;
+			}
+
+			#spinnerOverlay paper-spinner-lite {
+				--paper-spinner-color: #fff;
+			}
+
 			#retryOverlay iron-icon {
 				color: #fff;
 				--iron-icon-height: 64px;
@@ -49,15 +58,17 @@
 			}
 		</style>
 		
-		<paper-spinner-lite id="spinner" active="[[loading]]"></paper-spinner-lite>
-		<div id="retryOverlay" show="[[error]]">
+		<div id="spinnerOverlay" class="icon-overlay" show$="[[loading]]">
+			<paper-spinner-lite active="[[loading]]"></paper-spinner-lite>
+		</div>
+		<div id="retryOverlay" class="icon-overlay" show$="[[error]]">
 			<iron-icon icon="autorenew"></iron-icon>
 		</div>
 		<iron-image id="image"
-					error="{{error}}"
 					fade
-					loading="{{loaded}}"
-					preload
+					loading="{{loading}}"
+					error="{{error}}"
+					loaded="{{loaded}}"
 					sizing="[[sizing]]"
 					height="[[_computeHeight(sizing,height,maxHeight)]]"
 					width="[[_computeWidth(sizing,width,maxWidth)]]">
@@ -82,6 +93,24 @@
 				active: {
 					type: Boolean,
 					value: false,
+				},
+
+				loading: {
+					type: Boolean,
+					value: false,
+					notify: true,
+				},
+
+				error: {
+					type: Boolean,
+					value: false,
+					notify: true,
+				},
+
+				loaded: {
+					type: Boolean,
+					value: false,
+					notify: true,
 				},
 
 				sizing: {
@@ -137,10 +166,6 @@
 			/**
 			 * Compute functions
 			 */
-			_computeImageSizing: function(overlayMode) {
-				return overlayMode ? 'sizing' : 'cover';
-			},
-
 			_computeHeight: function(sizing, height, maxHeight) {
 				if(maxHeight === null)
 					return height;
