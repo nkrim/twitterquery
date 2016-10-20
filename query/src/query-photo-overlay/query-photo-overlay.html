@@ -2,6 +2,7 @@
 
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-overlay-behavior/iron-overlay-behavior.html">
 
 <link rel="import" href="../../bower_components/neon-animation/neon-animated-pages.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/slide-left-animation.html">
@@ -11,31 +12,25 @@
 
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 
-<link rel="import" href="../query-photo/query-photo.html">
-<link rel="import" href="../query-photo-overlay/query-photo-overlay.html">
-
-<dom-module id="query-photo-viewer">
+<dom-module id="query-photo-overlay">
 	<template>
 		<style>
 			:host {
 				display: block;
-				overflow: hidden;
-				border-radius: 8px;
 				position: relative;
-				z-index: 1; /*To fix border-radius bug on animation*/
-			}
-			:host([empty]) {
-				display: none;
+				height: 80vh;
+				width: 80vw;
 			}
 
 			#pages: {
-				width: 100%;
+				position: relative;
+				background-color: #000;
 			}
 
 			.controller {
 				@apply(--layout-horizontal);
 				@apply(--layout-center);
-				width: 96px;
+				width: 64px;
 				position: absolute;
 				top: 0;
 				bottom: 0;
@@ -71,26 +66,24 @@
 
 			#leftController {
 				@apply(--layout-start-justified);
-				left: 0;
+				left: -64px;
 			}
 			#rightController {
 				@apply(--layout-end-justified);
-				right: 0;
+				right: -64px;
 			}
 
 			#countDropdown {
-				@apply(--paper-font-subhead);
+				@apply(--paper-font-title);
 				@apply(--layout-horizontal);
 				@apply(--layout-center-center);
-				height: 32px;
-				width: 64px;
+				height: 48px;
 				background-color: rgba(0,0,0,0.5);
 				color: #fff;
-				font-weight: 500;
-				border-bottom-right-radius: 8px;
 				position: absolute;
 				top: 0;
 				left: 0;
+				right: 0;
 				pointer-events: none;
 			}
 			#countDropdown[hidden] {
@@ -106,37 +99,38 @@
 				text-align: right;
 			}
 		</style>
-
+		
 		<neon-animated-pages 	id="pages" style$="[[_computePagesStyle(photos)]]"  fallback-selection="0"
 								selected="{{selected}}" selected-attribute="active" selectable="query-photo" selected-item="{{selectedItem}}"
 								entry-animation="[[_computeEntryAnimtion(_right)]]" exit-animation="[[_computeExitAnimtion(_right)]]">
 		    <template is="dom-repeat" items="[[photos]]">
 		    	<query-photo 	photo-url="[[item.photo_url]]" 
 		    					link-url="[[item.expanded_url]]" 
-		    					sizing="cover"
+		    					sizing="fill"
 		    					height="[[item.height]]"
 		    					width="[[item.width]]"
-		    					max-height="[[maxHeight]]"
-		    					max-width="[[maxWidth]]">
+		    					max-height="[[_maxHeight]]"
+		    					max-width="[[_maxWidth]]">
 		    				</query-photo>
 		    </template>
+		    <div id="leftController" class="controller">
+				<iron-icon icon="chevron-left"></iron-icon>
+			</div>
+			<div id="rightController" class="controller">
+				<iron-icon icon="chevron-right"></iron-icon>
+			</div>
+			<div id="countDropdown" hidden$="[[_computeCountHidden(photos)]]">
+				<span class="count-number count-index">[[_computeCountIndex(selectedItem)]]</span>
+				<span>/</span>
+				<span class="count-number count-total">[[_computeCountTotal(photos)]]</span>
+			</div>
 		</neon-animated-pages>
-		<div id="leftController" class="controller">
-			<iron-icon icon="chevron-left"></iron-icon>
-		</div>
-		<div id="rightController" class="controller">
-			<iron-icon icon="chevron-right"></iron-icon>
-		</div>
-		<div id="countDropdown" hidden$="[[_computeCountHidden(photos)]]">
-			<span class="count-number count-index">[[_computeCountIndex(selectedItem)]]</span>
-			<span>/</span>
-			<span class="count-number count-total">[[_computeCountTotal(photos)]]</span>
-		</div>
-		
 	</template>
 	<script>
 		Polymer({
-			is: 'query-photo-viewer',
+			is: 'query-photo-overlay',
+
+			behaviors: [Polymer.IronOverlayBehavior],
 
 			properties: {
 				photos: {
@@ -150,24 +144,6 @@
 					notify: true,
 				},
 
-				empty: {
-					type: Boolean,
-					value: false,
-					readOnly: true,
-					computed: '_computeEmpty(photos)',
-					reflectToAttribute: true,
-				},
-
-				maxHeight: {
-					type: Number,
-					value: 360,
-				},
-
-				maxWidth: {
-					type: Number,
-					value: 720,
-				},
-
 				/**
 				 * Private properties
 				 */
@@ -176,6 +152,16 @@
 					value: false,
 					readOnly: true,
 				},
+
+				_maxHeight: {
+					type: Number,
+					value: null,
+				},
+
+				_maxWidth: {
+					type: Number,
+					value: null,
+				},
 			},
 
 			listeners: {
@@ -183,6 +169,11 @@
 				'pages.iron-items-changed': '_handlePagesItemsChanged',
 				'leftController.tap': '_handleLeftControllerTap',
 				'rightController.tap': '_handleRightControllerTap',
+			},
+
+			ready: function() {
+				// Set inherited values
+				this.withBackdrop = true;
 			},
 
 			/**
@@ -244,14 +235,41 @@
 			},
 
 			_computePagesStyle: function(photos) {
+				var height = this.offsetHeight;
 				var width = this.offsetWidth;
-				var maxHeight = 0;
+				var maxHeight = null;
+				var maxWidth = null;
 				photos.forEach(function(p) {
-					if(p.height && p.width)
-						maxHeight = Math.max(maxHeight, p.height*width/p.width);
+					if(p.height && p.width) {
+						if(p.height >= height && p.width >= width) {
+							var heightRatio = height/p.height;
+							var widthRatio = width/p.width;
+							if(heightRatio <= widthRatio) {
+								maxHeight = height;
+								maxWidth = Math.max(maxWidth, width*heightRatio);
+							}
+							else {
+								maxHeight = Math.max(maxHeight, height*widthRatio);
+								maxWidth = width;
+							}
+						}
+						else if(p.height >= height) {
+							maxHeight = height;
+							maxWidth = Math.max(maxWidth, p.width*height/p.height);
+						}
+						else if(p.width >= width) {
+							maxHeight = Math.max(maxHeight, p.height*width/p.width);
+							maxWidth = width;
+						}
+						else {
+							maxHeight = Math.max(maxHeight, p.height);
+							maxWidth = Math.max(maxWidth, p.width)
+						}
+					}
 				});
-				var height = Math.min(maxHeight, this.maxHeight);
-				return "height: "+height+"px;";
+				this._maxHeight = maxHeight || null;
+				this._maxWidth = maxWidth || null;
+				return "height: "+height+"px; width: "+width+"pk;";
 			},
 
 			_computeEntryAnimtion: function(right) {

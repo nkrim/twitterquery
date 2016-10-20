@@ -59,23 +59,23 @@
 
 		<div id="main" style="height: [[_height]]px">
 			<neon-animated-pages id="pages" selected="[[_state]]" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
-			    <neon-animatable>
-			    	<div id="emptyContainer" class="result-container"></div>
-			    </neon-animatable>
-			    <neon-animatable>
-			    	<div id="messageContainer" class="result-container">[[message]]</div>
-			    </neon-animatable>
-			    <neon-animatable>
-			    	<div id="dataContainer" class="result-container">
+		    	<div>
+		    		<div id="emptyContainer" class="result-container"></div>
+		    	</div>
+		    	<div>
+		    		<div id="messageContainer" class="result-container">[[message]]</div>
+		    	</div>
+		    	<div>
+		    		<div id="dataContainer" class="result-container">
 			    		<div class="optional-message-container" empty$="[[_isEmptyString(message)]]">[[message]]</div>
 			    		<template id="list" is="dom-repeat" items="[[_computeStatuses(data)]]">
 			    			<query-block status="[[item]]"></query-block>
 			    		</template>
 			    	</div>
-			    </neon-animatable>
-			    <neon-animatable>
-			    	<div id="errorContainer" class="result-container"><b>Error:</b> [[error]]</div>
-			    </neon-animatable>
+			    </div>
+		    	<div>
+		    		<div id="errorContainer" class="result-container"><b>Error:</b> [[error]]</div>
+		    	</div>
 			</neon-animated-pages>
 		</div>
 		

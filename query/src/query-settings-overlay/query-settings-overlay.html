@@ -120,6 +120,24 @@
 			},
 
 			/**
+			 * Public functions
+			 */
+			set: function(option, value) {
+				switch(option) {
+					case 'limit':
+						var prev_limit = this.$.limitInput.value;
+						this.$.limitInput.value = value;
+						if(this.$.limitInput.validate()) {
+							this.$.limitSlider.active = true;
+							this.limit = value;
+						} else {
+							this.$.limitInput.value = prev_limit;
+						}
+						break;
+				}
+			},
+
+			/**
 			 * Event handlers
 			 */
 			_handleClose: function() {
@@ -127,7 +145,7 @@
 			},
 
 			_handleLimitInputChange: function() {
-				this.limitChange = true;
+				this.limitInputChange = true;
 				this.limit = parseInt(this.$.limitInput.value) || this.$.limitSlider.value;
 			},
 
@@ -137,8 +155,8 @@
 			},
 
 			_handleLimitSliderImmediateChanged: function(e) {
-				if(this.limitChange)
-					this.limitChange = false;
+				if(this.limitInputChange)
+					this.limitInputChange = false;
 				else if(this.$.limitSlider.active)
 					this.$.limitInput.value = e.detail.value;
 				else

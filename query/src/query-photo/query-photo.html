@@ -13,9 +13,6 @@
 				display: block;
 				position: relative;
 				overflow: hidden;
-			}
-
-			#image {
 				width: 100%;
 				height: 100%;
 			}
@@ -27,7 +24,7 @@
 				bottom: 0;
 				right: 0;
 				margin: auto;
-				--paper-spinner-color: var(--primary-color, #fff);
+				--paper-spinner-color: #fff;
 			}
 
 			#retryOverlay {
@@ -41,7 +38,14 @@
 				background-color: rgba(0,0,0,0.3);
 			}
 			#retryOverlay iron-icon {
-				color: var(--primary-color, #fff);
+				color: #fff;
+				--iron-icon-height: 64px;
+				--iron-icon-width: 64px;
+				--iron-icon-stroke-color: rgba(0,0,0,0.1);
+			}
+
+			#image {
+
 			}
 		</style>
 		
@@ -55,8 +59,8 @@
 					loading="{{loaded}}"
 					preload
 					sizing="[[sizing]]"
-					height="[[_computeHeight(height,maxHeight)]]"
-					width="[[_computeWidth(width,maxWidth)]]">
+					height="[[_computeHeight(sizing,height,maxHeight)]]"
+					width="[[_computeWidth(sizing,width,maxWidth)]]">
 				</iron-image>
 
 	</template>
@@ -82,7 +86,27 @@
 
 				sizing: {
 					type: String,
-					value: '',
+					value: null,
+				},
+
+				height: {
+					type: Number,
+					value: 0,
+				},
+
+				width: {
+					type: Number,
+					value: 0,
+				},
+
+				maxHeight: {
+					type: Number,
+					value: null,
+				},
+
+				maxWidth: {
+					type: Number,
+					value: null,
 				},
 			},
 
@@ -117,13 +141,20 @@
 				return overlayMode ? 'sizing' : 'cover';
 			},
 
-			_computeHeight: function(height, maxHeight) {
-				return height < maxHeight ? height : maxHeight;
+			_computeHeight: function(sizing, height, maxHeight) {
+				if(maxHeight === null)
+					return height;
+				if(sizing !== 'contain')
+					return maxHeight;
+				return Math.min(height, maxHeight);
 			},
 
-			_computeWidth: function(width, maxWidth) {
-				//return width < maxWidth ? width : maxWidth;
-				return maxWidth;
+			_computeWidth: function(sizing, width, maxWidth) {
+				if(maxWidth === null)
+					return width;
+				if(sizing !== 'contain')
+					return maxWidth;
+				return Math.min(width, maxWidth);
 			},
  		});
 	</script>

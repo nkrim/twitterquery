@@ -259,6 +259,7 @@
       },
 
       listeners: {
+        'location.query-params-changed': '_handleQueryParamsChanged',
         'mainTitle.tap': '_handleTitleTap',
         'searchBar.search-enter': '_handleSearchEnter',
         'searchBar.search-button-down': '_handleSearchButonDown',
@@ -268,25 +269,14 @@
       }, 
 
       ready: function() {
+        this.isReady = true;
         // Set settings overlay defaults
         var overlay = this.$.settingsOverlay;
         overlay.positionTarget = this.$.settings;
         overlay.verticalAlign = 'top';
         overlay.horizontalAlign = 'right';
-
-        // Perform initial search based on url params
-        var params = this.$.location.queryParams || {};
-        if('limit' in params) {
-          var limit = parseInt(params.limit);
-          if(limit !== null) {
-            this.$.main.limit = limit;
-          }
-        }
-        if('q' in params) {
-          var query = decodeURIComponent(params.q);
-          this.$.searchBar.bindValue = query;
-          this.search(query);
-        }
+        // Intialize off of query paramters
+        this._parseLocationParams();
       },
 
       attached: function() {
@@ -354,14 +344,24 @@
           params['q'] = query;
           if(limit > 0)
             params['limit'] = limit;
-          else
-            params['limit'] = null;
-        }
-        else {
-          params['q'] = null;
-          params['limit'] = null;
         }
         this.$.location.queryParams = params;
+      },
+
+      _parseLocationParams: function(params=null) {
+        if(!params)
+          params = this.$.location.queryParams;
+        if('limit' in params ) {
+          var limit = parseInt(params.limit);
+          if(limit !== null) {
+            this.$.main.limit = limit;
+          }
+        }
+        if('q' in params) {
+          var query = decodeURIComponent(params.q);
+          this.$.searchBar.bindValue = query;
+          this.search(query);
+        }
       },
 
       /**
@@ -376,6 +376,12 @@
       /**
        * Event handlers
        */
+      _handleQueryParamsChanged: function(e) {
+        if(!this.isReady)
+          return;
+        this._parseLocationParams(e.detail.value || {});
+      },
+
       _handleTitleTap: function() {
         this.scrollToTop();
       },
