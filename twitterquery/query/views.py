@@ -220,7 +220,7 @@ def query(request):
 	instance.refresh_from_db(fields=('search',))
 	instance.success = True
 	instance.save()
-	return makeJsonResponse(QueryInstanceSerializer(instance).data)
+	return makeJsonResponse({'success':True 'data': QueryInstanceSerializer(instance).data})
 
 def get(request, query_pk):
 	instance = get_object_or_404(QueryInstance, pk=query_pk)
