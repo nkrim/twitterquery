@@ -52,16 +52,19 @@
 				padding: 24px;
 			}
 
-			.data-message-container {
+			.results-message-container {
 				@apply(--layout-vertical);
 				padding: 24px 24px 12px;
 			}
-			.data-message-container .results-header {
+			.results-message-container .results-header {
 				@apply(--paper-font-display1);
 				font-weight: 500;
 			}
-			.data-message-container .results-message {
+			.results-message-container .results-message {
 				@apply(--paper-font-subhead)
+			}
+			.results-mesage-container[hidden] {
+				display: none;
 			}
 		</style>
 
@@ -75,7 +78,7 @@
 		    	</div>
 		    	<div>
 		    		<div id="dataContainer" class="result-container">
-			    		<div class="data-message-container"">
+			    		<div class="results-message-container" hidden$="[[_computeDataMessageHidden(_state)]]">
 			    			<span class="results-header">Results:</span>
 			    			<span class="results-message">[[message]]</span>
 			    		</div>
@@ -85,7 +88,12 @@
 			    	</div>
 			    </div>
 		    	<div>
-		    		<div id="errorContainer" class="result-container"><b>Error:</b> [[error]]</div>
+		    		<div id="errorContainer" class="result-container">
+		    			<div class="results-message-container" hidden$="[[_computeErrorMessageHidden(_state)]]">
+		    				<span class="results-header">Error:</span>
+		    				<span class="results-message">[[error]]</span>
+		    			</div>
+		    		</div>
 		    	</div>
 			</neon-animated-pages>
 		</div>
@@ -124,7 +132,7 @@
 
 				_state: {
 					type: Number,
-					value: 0, // 0=empty; 1=data; 2=error
+					value: 0, // 0=empty; 1=message; 2=data; 3=error
 					readOnly: true,
 					observer: '_stateChanged',
 				}
@@ -230,10 +238,16 @@
 				this.resetHeight(state, true, true);
 			},
 
-			_computeMessage: function(data) {
-				if(data !== null && 'message' in data)
-					return data.message;
-				return '';
+			/**
+			 * Compute functions
+			 */
+
+			_computeDataMessageHidden: function(state) {
+				return state === 2;
+			},
+
+			_computeErrorMessageHidden: function(state) {
+				return state === 3;
 			},
 
 			_computeStatuses: function(data) {
