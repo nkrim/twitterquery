@@ -16,24 +16,88 @@
 	<template>
 		<style>
 			:host {
-				display: block;
-				position: relative;
+				@apply(--layout-horizontal);
+				@apply(--layout-center-center);
 				height: 80vh;
 				width: 80vw;
+				pointer-events: none;
 			}
 
-			#pages: {
+			.main-container {
+				position: relative;
+				pointer-events: auto;
+			}
+
+			.media-container {
+				position: relative;
+				height: 100%;
+				width: 100%;
+				overflow: hidden;
+				border-radius: 4px;
+				background-color: #000;
+				z-index: 1;
+			}
+
+			.count-header {
+				@apply(--paper-font-title);
+				@apply(--layout-horizontal);
+				@apply(--layout-center-center);
+				height: 48px;
+				background-color: rgba(0,0,0,0.5);
+				color: #fff;
+				position: absolute;
+				top: -48px;
+				left: 0;
+				right: 0;
+				pointer-events: none;
+				-webkit-transition: top 0.2s linear;
+				-moz-transition: top 0.2s linear;
+				-o-transition: top 0.2s linear;
+				transition: top 0.2s linear;
+			}
+			.main-container:hover .count-header {
+				top: 0;
+			}
+			.count-header[hidden] {
+				display: none;
+			}
+			.count-header span {
+				margin: 0 1px;
+			}
+			.count-header span.count-number {
+				@apply(--layout-flex);
+			}
+			.count-header span.count-index {
+				text-align: right;
+			}
+
+			#pages {
+				@apply(--layout-flex);
+				height: 100%;
+				width: 100%;
 				position: relative;
 				background-color: #000;
+			}
+
+			.controller-container {
+				@apply(--layout-horizontal);
+				@apply(--layout-center);
+				position: absolute;
+				top: 0;
+				left: -64px;
+				right: -64px;
+				bottom: 0;
+				z-index: 1;
+			}
+			.controller-container[hidden] {
+				display: none;
 			}
 
 			.controller {
 				@apply(--layout-horizontal);
 				@apply(--layout-center);
-				width: 64px;
-				position: absolute;
-				top: 0;
-				bottom: 0;
+				height: 50%;
+				pointer-events: auto;
 				cursor: pointer;
 				opacity: 1;
 				visibility: visible;
@@ -42,7 +106,7 @@
 				-o-transition: opacity 0.2s linear, visibility 0s linear 0s;
 				transition: opacity 0.2s linear, visibility 0s linear 0s;
 			}
-			.controller[disabled] {
+			.controller[disabled], .main-container:not(:hover) .controller {
 				opacity: 0;
 				visibility: hidden;
 				-webkit-transition: opacity 0.2s linear, visibility 0s linear 0.2s;
@@ -51,7 +115,7 @@
 				transition: opacity 0.2s linear, visibility 0s linear 0.2s;
 			}
 			.controller iron-icon {
-				color: rgba(255,255,255,0.3);
+				color: rgba(255,255,255,0.5);
 				--iron-icon-height: 64px;
 				--iron-icon-width: 64px;
 				--iron-icon-stroke-color: rgba(0,0,0,0.1);
@@ -60,71 +124,79 @@
 				-o-transition: color 0.2s linear;
 				transition: color 0.2s linear;
 			}
-			.controller:hover iron-icon {
+			.controller:hover:not([disabled]) iron-icon {
 				color: rgba(255,255,255,1);
 			}
 
 			#leftController {
+				@apply(--layout-flex);
 				@apply(--layout-start-justified);
 				left: -64px;
 			}
+
 			#rightController {
+				@apply(--layout-flex-2);
 				@apply(--layout-end-justified);
 				right: -64px;
 			}
 
-			#countDropdown {
-				@apply(--paper-font-title);
-				@apply(--layout-horizontal);
-				@apply(--layout-center-center);
-				height: 48px;
-				background-color: rgba(0,0,0,0.5);
-				color: #fff;
+			#close {
 				position: absolute;
 				top: 0;
-				left: 0;
-				right: 0;
-				pointer-events: none;
+				right: -48px;
+				cursor: pointer;
+				pointer-events: auto;
+				z-index: 1;
 			}
-			#countDropdown[hidden] {
-				display: none;
+			#close iron-icon {
+				color: rgba(255,255,255,0.5);
+				--iron-icon-height: 48px;
+				--iron-icon-width: 48px;
+				--iron-icon-stroke-color: rgba(0,0,0,0.1);
+				-webkit-transition: color 0.2s linear;
+				-moz-transition: color 0.2s linear;
+				-o-transition: color 0.2s linear;
+				transition: color 0.2s linear;
 			}
-			#countDropdown span {
-				margin: 0 1px;
-			}
-			#countDropdown span.count-number {
-				@apply(--layout-flex);
-			}
-			#countDropdown span.count-index {
-				text-align: right;
+			#close:hover iron-icon {
+				color: rgba(255,255,255,1);
 			}
 		</style>
 		
-		<neon-animated-pages 	id="pages" style$="[[_computePagesStyle(_maxHeight, _maxWidth)]]"  fallback-selection="0"
-								selected="{{selected}}" selected-attribute="active" selectable="query-photo" selected-item="{{selectedItem}}"
-								entry-animation="[[_computeEntryAnimtion(_right)]]" exit-animation="[[_computeExitAnimtion(_right)]]">
-		    <template is="dom-repeat" items="[[photos]]">
-		    	<query-photo 	photo-url="[[item.photo_url]]" 
-		    					link-url="[[item.expanded_url]]" 
-		    					sizing="fill"
-		    					height="[[item.height]]"
-		    					width="[[item.width]]"
-		    					max-height="[[_maxHeight]]"
-		    					max-width="[[_maxWidth]]">
-		    				</query-photo>
-		    </template>
-		    <div id="leftController" class="controller">
-				<iron-icon icon="chevron-left"></iron-icon>
+		<div class="main-container" style$="[[_computePagesStyle(_maxHeight, _maxWidth)]]">
+			<div class="media-container">
+				<neon-animated-pages 	id="pages" fallback-selection="0"
+										selected="{{selected}}" selected-attribute="active" selectable="query-photo" selected-item="{{selectedItem}}"
+										entry-animation="[[_computeEntryAnimtion(_right)]]" exit-animation="[[_computeExitAnimtion(_right)]]">
+				    <template is="dom-repeat" items="[[photos]]">
+				    	<query-photo 	photo-url="[[item.photo_url]]" 
+				    					link-url="[[item.expanded_url]]" 
+				    					sizing="contain"
+				    					height="[[item.height]]"
+				    					width="[[item.width]]"
+				    					max-height="[[_maxHeight]]"
+				    					max-width="[[_maxWidth]]">
+				    				</query-photo>
+				    </template>
+				</neon-animated-pages>
+				<div class="count-header" hidden$="[[_computeCountHidden(photos)]]">
+					<span class="count-number count-index">[[_computeCountIndex(selectedItem)]]</span>
+					<span>/</span>
+					<span class="count-number count-total">[[_computeCountTotal(photos)]]</span>
+				</div>
 			</div>
-			<div id="rightController" class="controller">
-				<iron-icon icon="chevron-right"></iron-icon>
+			<div class="controller-container" hidden$="[[_computeCountHidden(photos)]]">
+				<div id="leftController" class="controller">
+					<iron-icon icon="chevron-left"></iron-icon>
+				</div>
+				<div id="rightController" class="controller">
+					<iron-icon icon="chevron-right"></iron-icon>
+				</div>
 			</div>
-			<div id="countDropdown" hidden$="[[_computeCountHidden(photos)]]">
-				<span class="count-number count-index">[[_computeCountIndex(selectedItem)]]</span>
-				<span>/</span>
-				<span class="count-number count-total">[[_computeCountTotal(photos)]]</span>
+			<div id="close">
+				<iron-icon icon="close"></iron-icon>
 			</div>
-		</neon-animated-pages>
+		</div>
 	</template>
 	<script>
 		Polymer({
@@ -165,10 +237,12 @@
 			},
 
 			listeners: {
+				'iron-overlay-opened': '_handleOpened',
 				'pages.iron-select': '_handlePagesSelect',
 				'pages.iron-items-changed': '_handlePagesItemsChanged',
 				'leftController.tap': '_handleLeftControllerTap',
 				'rightController.tap': '_handleRightControllerTap',
+				'close.tap': '_handleCloseTap',
 			},
 
 			ready: function() {
@@ -220,12 +294,14 @@
 						if(p.height >= height && p.width >= width) {
 							var heightRatio = height/p.height;
 							var widthRatio = width/p.width;
+							console.log(heightRatio);
+							console.log(widthRatio);
 							if(heightRatio <= widthRatio) {
 								maxHeight = height;
-								maxWidth = Math.max(maxWidth, width*heightRatio);
+								maxWidth = Math.max(maxWidth, p.width*heightRatio);
 							}
 							else {
-								maxHeight = Math.max(maxHeight, height*widthRatio);
+								maxHeight = Math.max(maxHeight, p.height*widthRatio);
 								maxWidth = width;
 							}
 						}
@@ -250,12 +326,18 @@
 			/**
 			 * Event listeners
 			 */
+			_handleOpened: function() {
+				this._setMaxHeightWidth();
+			},
+
 			_handlePagesSelect: function() {
 				this._setControllerUsability();
 			},
 
 			_handlePagesItemsChanged: function() {
-				this._setControllerUsability();
+				var items = this.$.pages.items;
+				this._setControllerUsability(items);
+				this._setMaxHeightWidth(items);
 			},
 
 			_handleLeftControllerTap: function() {
@@ -266,6 +348,10 @@
 			_handleRightControllerTap: function() {
 				this._set_right(true);
 				this.$.pages.selectNext();
+			},
+
+			_handleCloseTap: function() {
+				this.close();
 			},
 
 			/**

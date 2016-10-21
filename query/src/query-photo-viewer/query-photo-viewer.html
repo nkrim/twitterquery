@@ -12,7 +12,6 @@
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 
 <link rel="import" href="../query-photo/query-photo.html">
-<link rel="import" href="../query-photo-overlay/query-photo-overlay.html">
 
 <dom-module id="query-photo-viewer">
 	<template>
@@ -22,7 +21,7 @@
 				overflow: hidden;
 				border-radius: 8px;
 				position: relative;
-				z-index: 1; /*To fix border-radius bug on animation*/
+				/*z-index: 1; To fix border-radius bug on animation*/
 			}
 			:host([empty]) {
 				display: none;
@@ -137,7 +136,7 @@
 		    					sizing="cover"
 		    					height="[[item.height]]"
 		    					width="[[item.width]]"
-		    					max-height="[[maxHeight]]"
+		    					max-height="[[_height]]"
 		    					max-width="[[maxWidth]]">
 		    				</query-photo>
 		    </template>
@@ -158,8 +157,6 @@
 			<span>/</span>
 			<span class="count-number count-total">[[_computeCountTotal(photos)]]</span>
 		</div>
-
-		<query-photo-overlay id="overlay" photos="[[photos]]" selected="{{selected}}"></query-photo-overlay>
 		
 	</template>
 	<script>
@@ -280,7 +277,6 @@
 			},
 
 			_handlePhotoLoadedChanged: function(e) {
-				console.log(e);
 				this._setControllerUsability();
 			},
 
@@ -295,7 +291,7 @@
 			},
 
 			_handleCenterControllerTap: function() {
-				this.$.overlay.open();
+				this.fire('photo-overlay-open', {'photos': this.photos})
 			},
 
 			/**

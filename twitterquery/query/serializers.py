@@ -35,6 +35,7 @@ class SearchSerializer(serializers.ModelSerializer):
 
 class QueryInstanceSerializer(serializers.ModelSerializer):
 	statuses = StatusSerializer(many=True)
+	photo_count = serializers.IntegerField()
 
 	class Meta:
 		model = QueryInstance

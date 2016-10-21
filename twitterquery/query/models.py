@@ -111,6 +111,9 @@ class QueryInstance(models.Model):
 		statuses = list(self.statuses())
 		return Photo.objects.prefetch_related('statuses').filter(status__in=statuses).distinct()
 
+	def photo_count(self):
+		return self.photos().count()
+
 	def __str__(self):
 		return '{} {}'.format(unquote_plus(self.query), self.time_of.strftime('%Y-%m-%d %H.%M.%S'))
 

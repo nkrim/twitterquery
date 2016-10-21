@@ -20,6 +20,7 @@
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
 
 <link rel="import" href="../query-main/query-main.html">
+<link rel="import" href="../query-photo-overlay/query-photo-overlay.html">
 <link rel="import" href="../query-search-bar/query-search-bar.html">
 <link rel="import" href="../query-settings-overlay/query-settings-overlay.html">
 
@@ -226,6 +227,7 @@
     </app-header-layout>
 
     <query-settings-overlay id="settingsOverlay" limit="{{limit}}"></query-settings-overlay>
+    <query-photo-overlay id="photoOverlay" photos="[[photos]]" selected="{{selected}}"></query-photo-overlay>
 
   </template>
   <script>
@@ -259,8 +261,10 @@
       },
 
       listeners: {
+        'scroll': '_handleScroll',
         'location.query-params-changed': '_handleQueryParamsChanged',
         'mainTitle.tap': '_handleTitleTap',
+        'photo-overlay-open': '_handlePhotoOverlayOpen',
         'searchBar.search-enter': '_handleSearchEnter',
         'searchBar.search-button-down': '_handleSearchButonDown',
         'searchBar.search-button-up': '_handleSearchButonUp',
@@ -270,13 +274,10 @@
 
       ready: function() {
         this.isReady = true;
-        // Set settings overlay defaults
-        var overlay = this.$.settingsOverlay;
-        overlay.positionTarget = this.$.settings;
-        overlay.verticalAlign = 'top';
-        overlay.horizontalAlign = 'right';
         // Intialize off of query paramters
         this._parseLocationParams();
+        // Add scroll listener
+        this.listen(document, 'scroll', '_handleScroll');
       },
 
       attached: function() {
@@ -321,13 +322,18 @@
             this.fire('scroll-finished');
             clearInterval(this.scrollId);
           }
+          else if(Math.abs(window.pageYOffset-next) > 1) {
+            clearInterval(this.scrollId);
+          } 
           else {
-            window.scrollTo(left, easeOut(t, cur, diff, dur));
+            next = easeOut(t, cur, diff, dur);
+            window.scrollTo(left, next);
           }
         }.bind(this);
         var left = window.pageXOffset;
         var start = Date.now();
         var cur = window.pageYOffset;
+        var next = cur;
         var diff = top - cur;
         var dur = 500;
         var t = 0;
@@ -376,6 +382,10 @@
       /**
        * Event handlers
        */
+      _handleScroll: function(e) {
+        console.log(e);
+      },
+
       _handleQueryParamsChanged: function(e) {
         if(!this.isReady)
           return;
@@ -384,6 +394,14 @@
 
       _handleTitleTap: function() {
         this.scrollToTop();
+      },
+
+      _handlePhotoOverlayOpen: function(e) {
+        var photos = e.detail.photos;
+        if(photos) {
+          this.$.photoOverlay.photos = photos;
+          this.$.photoOverlay.open();
+        }
       },
 
       _handleSearchEnter: function(e) {
