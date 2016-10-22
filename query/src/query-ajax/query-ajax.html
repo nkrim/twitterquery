@@ -104,18 +104,10 @@
 				if('success' in response && response.success) {
 					if('data' in response && 'statuses' in response.data) {
 						success = true;
-						var length = response.data.statuses.length;
-						var photo_count = 'photo_count' in response.data ? response.data.photo_count : null;
-						data_cur = {
-							'data': response.data,
-							'message': 'Found '+length+' status'+(length !== 1 ? 'es' : '')+(photo_count!==null ? ' with '+photo_count+' photo'+(photo_count!==1 ? 's' : '') : ''),
-						};
+						data_cur = {'data': response.data}
 					}
 					else if('empty' in response) {
-						data_cur = {
-							'data': response.data,
-							'message': 'No statuses satisfy the search',
-						};
+						data_cur = {'message': 'No statuses satisfy the search'};
 					}
 					else {
 						data_cur = {'error': 'No data found on succesful response'};

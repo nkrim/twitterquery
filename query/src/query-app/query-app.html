@@ -261,7 +261,6 @@
       },
 
       listeners: {
-        'scroll': '_handleScroll',
         'location.query-params-changed': '_handleQueryParamsChanged',
         'mainTitle.tap': '_handleTitleTap',
         'photo-overlay-open': '_handlePhotoOverlayOpen',
@@ -276,8 +275,6 @@
         this.isReady = true;
         // Intialize off of query paramters
         this._parseLocationParams();
-        // Add scroll listener
-        this.listen(document, 'scroll', '_handleScroll');
       },
 
       attached: function() {
@@ -382,10 +379,6 @@
       /**
        * Event handlers
        */
-      _handleScroll: function(e) {
-        console.log(e);
-      },
-
       _handleQueryParamsChanged: function(e) {
         if(!this.isReady)
           return;
@@ -398,8 +391,10 @@
 
       _handlePhotoOverlayOpen: function(e) {
         var photos = e.detail.photos;
+        var selected = e.detail.selected;
         if(photos) {
           this.$.photoOverlay.photos = photos;
+          this.$.photoOverlay.selected = selected;
           this.$.photoOverlay.open();
         }
       },

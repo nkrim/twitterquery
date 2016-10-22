@@ -10,7 +10,8 @@
 	<template>
 		<style>
 			:host {
-				display: block;
+				@apply(--layout-horizontal);
+				@apply(--layout-center-center);
 				position: relative;
 				overflow: hidden;
 				width: 100%;
@@ -46,6 +47,9 @@
 				--paper-spinner-color: #fff;
 			}
 
+			#retryOverlay {
+				cursor: pointer;
+			}
 			#retryOverlay iron-icon {
 				color: #fff;
 				--iron-icon-height: 64px;
@@ -58,12 +62,6 @@
 			}
 		</style>
 		
-		<div id="spinnerOverlay" class="icon-overlay" show$="[[loading]]">
-			<paper-spinner-lite active="[[loading]]"></paper-spinner-lite>
-		</div>
-		<div id="retryOverlay" class="icon-overlay" show$="[[error]]">
-			<iron-icon icon="autorenew"></iron-icon>
-		</div>
 		<iron-image id="image"
 					fade
 					loading="{{loading}}"
@@ -73,6 +71,12 @@
 					height="[[_computeHeight(sizing,height,maxHeight)]]"
 					width="[[_computeWidth(sizing,width,maxWidth)]]">
 				</iron-image>
+		<div id="spinnerOverlay" class="icon-overlay" show$="[[loading]]">
+			<paper-spinner-lite active="[[loading]]"></paper-spinner-lite>
+		</div>
+		<div id="retryOverlay" class="icon-overlay" show$="[[error]]">
+			<iron-icon icon="autorenew"></iron-icon>
+		</div>
 
 	</template>
 	<script>
@@ -144,7 +148,7 @@
 			],
 
 			listeners: {
-				'image.error-changed': '_handleImageErrorChanged'
+				'retryOverlay.tap': '_handleRetry',
 			},
 
 			/**
@@ -154,13 +158,6 @@
 				if(active && photoUrl) {
 					this.$.image.src = this.photoUrl;
 				}
-			},
-
-			/**
-			 * Event handlers
-			 */
-			_handleImageErrorChanged: function(e) {
-				//this._setError(e.detail.value);
 			},
 
 			/**
@@ -180,6 +177,17 @@
 				if(sizing !== 'contain')
 					return maxWidth;
 				return Math.min(width, maxWidth);
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleRetry: function() {
+				if(this.active && this.photoUrl) {
+					var image = this.$.image;
+					image.src = '';
+					image.src = this.photoUrl;
+				}
 			},
  		});
 	</script>

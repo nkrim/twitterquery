@@ -1,14 +1,16 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-scroll-threshold/iron-scroll-threshold.html">
 
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 
 <link rel="import" href="../../bower_components/neon-animation/neon-animated-pages.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
 
-<link rel="import" href="../query-block/query-block.html">
+<link rel="import" href="../query-list-page/query-list-page.html">
 
 <dom-module id="query-list">
 	<template>
@@ -23,11 +25,9 @@
 			#main {
 				width: 100%;
 				overflow: hidden;
+				margin-bottom: 48px;
 			}
 
-			#pages neon-animatable {
-				display: block;
-			}
 			.result-container {
 				@apply(--paper-font-headline);
 				display: block;
@@ -40,9 +40,6 @@
 			#dataContainer {
 				
 			}
-			#dataContainer query-block{
-				border-top: solid 1px rgba(0,0,0,0.3);
-			}
 
 			#messageContainer {
 				padding: 24px;
@@ -52,21 +49,48 @@
 				padding: 24px;
 			}
 
-			.results-message-container {
+			.results-header-container {
 				@apply(--layout-vertical);
 				padding: 24px 24px 12px;
 			}
-			.results-message-container .results-header {
+			.results-header-container .results-header {
 				@apply(--paper-font-display1);
 				font-weight: 500;
 			}
-			.results-message-container .results-message {
-				@apply(--paper-font-subhead)
+			.results-header-container .results-message {
+				@apply(--paper-font-subhead);
 			}
-			.results-mesage-container[hidden] {
+			.results-header-container[hidden] {
 				display: none;
 			}
+
+			#loadMoreMessage {
+				@apply(--layout-vertical);
+				@apply(--layout-center-center);
+				cursor: pointer;
+				height: 196px;
+				border-top: solid 1px rgba(0,0,0,0.3);
+			}
+			#loadMoreMessage[hidden] {
+				display: none;
+			}
+			#loadMoreMessage:hover {
+				background-color: rgba(0,0,0,0.05);
+			}
+			#loadMoreMessage span {
+				@apply(--paper-font-display1);
+				color: var(--primary-color, #55acee);
+				margin-top: 28px;
+			}
+			#loadMoreMessage[loading] span {
+				font-weight: 500;
+			}
+			#loadMoreMessage paper-spinner-lite {
+				--paper-spinner-color: var(--primary-color, #55acee);
+			}
 		</style>
+
+		<iron-scroll-threshold id="loadMoreThreshold" scroll-target="document" lower-threshold="48"></iron-scroll-threshold>
 
 		<div id="main" style="height: [[_height]]px">
 			<neon-animated-pages id="pages" selected="[[_state]]" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
@@ -78,18 +102,22 @@
 		    	</div>
 		    	<div>
 		    		<div id="dataContainer" class="result-container">
-			    		<div class="results-message-container" hidden$="[[_computeDataMessageHidden(_state)]]">
+			    		<div class="results-header-container" hidden$="[[_computeDataHeaderHidden(_state)]]">
 			    			<span class="results-header">Results:</span>
-			    			<span class="results-message">[[message]]</span>
+			    			<span class="results-message">[[_computeDataMessage(data)]]</span>
 			    		</div>
-			    		<template id="list" is="dom-repeat" items="[[_computeStatuses(data)]]">
-			    			<query-block status="[[item]]"></query-block>
+			    		<template id="list" is="dom-repeat" items="[[_pages]]">
+			    			<query-list-page statuses="[[item]]"></query-list-page>
 			    		</template>
+			    		<div id="loadMoreMessage" hidden$="[[!_nextToLoad]]" loading$="[[_loadingPage]]">
+							<span>More Statuses...</span>
+							<paper-spinner-lite class="spinner" active="[[_loadingPage]]"></paper-spinner-lite>
+						</div>
 			    	</div>
 			    </div>
 		    	<div>
 		    		<div id="errorContainer" class="result-container">
-		    			<div class="results-message-container" hidden$="[[_computeErrorMessageHidden(_state)]]">
+		    			<div class="results-header-container" hidden$="[[_computeErrorHeaderHidden(_state)]]">
 		    				<span class="results-header">Error:</span>
 		    				<span class="results-message">[[error]]</span>
 		    			</div>
@@ -122,6 +150,11 @@
 					observer: '_errorChanged',
 				},
 
+				perPage: {
+					type: Number,
+					value: 10,
+				},
+
 				/**
 				 * Private properties
 				 */
@@ -135,11 +168,37 @@
 					value: 0, // 0=empty; 1=message; 2=data; 3=error
 					readOnly: true,
 					observer: '_stateChanged',
-				}
+				},
+
+				_pages: {
+					type: Array,
+					value: function() { return []; },
+					readOnly: true,
+					computed: '_computePages(data, perPage)',
+				},
+
+				_nextToLoad: {
+					type: HTMLElement,
+					value: null,
+					readOnly: true,
+				},
+
+				_loadingPage: {
+					type: Boolean,
+					value: false,
+					readOnly: true,
+				},
+			},
+
+			listeners: {
+				'list.dom-change': '_handleListDomChange',
+				'query-page-loaded': '_handleQueryPageLoaded',
+				'loadMoreThreshold.lower-threshold': '_handleLoadMore',
+				'loadMoreMessage.tap': '_handleLoadMore',
 			},
 
 			ready: function() {
-				this.listen(Polymer.dom(document.body).querySelector('#app'), 'scroll-finished', '_handleScrollFinished')
+				this.listen(Polymer.dom(document.body).querySelector('#app'), 'scroll-finished', '_handleScrollFinished');
 			},
 
 			/**
@@ -172,10 +231,9 @@
 					case 3:
 						container = this.$.errorContainer;
 						scrollTo = 192;
-
 						break;
 				}
-				this._setHeight(container, scroll?scrollTo:-2, scrollCompensate||(scrollTo!==0));
+				this._setHeight(container, scroll?scrollTo:-1, scrollCompensate||(scrollTo!==0));
 			},
 
 			/**
@@ -219,7 +277,7 @@
 			_dataChanged: function(data) {
 				if(!data) {
 					if(this._state === 2)
-						this._set_state(this.message ? 1 : 0);
+						this._set_state(0);
 				}
 				else
 					this._set_state(2);
@@ -241,13 +299,37 @@
 			/**
 			 * Compute functions
 			 */
-
-			_computeDataMessageHidden: function(state) {
-				return state === 2;
+			_computePages: function(data, perPage) {
+				var pages = [];
+				if(perPage > 0 && data && 'statuses' in data) {
+					var statuses = data.statuses;
+					var page;
+					for(var i=0; i<statuses.length; i++) {
+						if(i % perPage === 0) {
+							page = [];
+							pages.push(page);
+						}
+						page.push(statuses[i]);
+					}
+				}
+				return pages;
 			},
 
-			_computeErrorMessageHidden: function(state) {
-				return state === 3;
+			_computeDataHeaderHidden: function(state) {
+				return state !== 2;
+			},
+
+			_computeErrorHeaderHidden: function(state) {
+				return state !== 3;
+			},
+
+			_computeDataMessage: function(data) {
+				if(data) {
+					var length = data.statuses.length;
+					var photo_count = 'photo_count' in data ? data.photo_count : null;
+					return 'Found '+length+' status'+(length !== 1 ? 'es' : '')+(photo_count!==null ? ' with '+photo_count+' photo'+(photo_count!==1 ? 's' : '') : '');
+				}
+				return '';
 			},
 
 			_computeStatuses: function(data) {
@@ -261,6 +343,38 @@
 			 */
 			_handleScrollFinished: function() {
 				this.resetHeight();
+			},
+
+			_handleListDomChange: function(e) {
+				this.$.loadMoreThreshold.clearTriggers();
+				var firstPage = this.$$('query-list-page');
+				if(firstPage) {
+					firstPage.active = true;
+				}
+			},
+
+			_handleLoadMore: function() {
+				if(this._nextToLoad) {
+					this._set_loadingPage(true);
+					this._nextToLoad.active = true;
+				}
+			},
+
+			_handleQueryPageLoaded: function(e) {
+				this._set_loadingPage(false);
+				this.$.loadMoreThreshold.clearTriggers();
+				var page = e.detail.value;
+				this._set_loadingPage(false);
+				var nextPage = page.nextElementSibling;
+				if(nextPage && nextPage.tagName === 'QUERY-LIST-PAGE') {
+					this._set_nextToLoad(nextPage);
+				}
+				else {
+					this._set_nextToLoad(null);
+				}
+				this.resetHeight();
+				var scrollTo = page.getBoundingClientRect().top - document.body.getBoundingClientRect().top - 192;
+				Polymer.dom(document.body).querySelector('#app').scroll(scrollTo);
 			},
 		});
 	</script>

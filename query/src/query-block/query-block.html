@@ -40,7 +40,7 @@
 				text-decoration: underline;
 				color: var(--accent1-color, #000);
 			}
-			.user-link > div {
+			.user-link > div:not(.profile-image-container) {
 				@apply(--layout-vertical);
 				@apply(--layout-center-justified);
 				padding: 4px;
@@ -53,11 +53,28 @@
 				position: relative;
 				height: 56px;
 				width: 56px;
+				overflow: hidden;
+				border-radius: 8px;
+			}
+			.profile-image-container:before {
+				content: '';
+				height: 100%;
+				width: 100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				margin: auto;
+				border-radius: inherit;
+				box-sizing: border-box;
+				border: 1px solid transparent;
+				background-color: rgba(0,0,0,0.2);
 			}
 			.profile-image {
 				height: 100%;
 				width: 100%;
-				border-radius: 28px;
+				
 			}
 			.profile-image-spinner {
 				position: absolute;
@@ -66,6 +83,7 @@
 				right: 0;
 				bottom: 0;
 				margin: auto;
+				--paper-spinner-color: #fff;
 			}
 
 			.name-container span {
@@ -126,7 +144,7 @@
 		<div class="block-header">
 			<a class="user-link" target="_blank" href$="[[_computeUserLink(user)]]">
 				<div class="profile-image-container">
-					<iron-image class="profile-image" src="[[_computeUserProfileImage(user)]]" loading="{{profileImageLoading}}"></iron-image>
+					<iron-image class="profile-image" src="[[_computeUserProfileImage(user)]]" loading="{{profileImageLoading}}" sizing="cover"></iron-image>
 					<paper-spinner-lite class="profile-image-spinner" active="[[profileImageLoading]]"></paper-spinner-lite>
 				</div>
 				<div class="name-container">

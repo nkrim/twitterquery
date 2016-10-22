@@ -1,0 +1,95 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<link rel="import" href="../query-block/query-block.html">
+
+<dom-module id="query-list-page">
+	<template>
+		<style>
+			:host {
+				display: block;
+				position: relative;
+			}
+			:host(:not([active])) {
+				display: none;
+			}		
+
+			query-block {
+				border-top: solid 1px rgba(0,0,0,0.3);
+			}
+		</style>
+
+		<template is="dom-repeat" id="list" initial-count="10">
+			<query-block status="[[item]]"></query-block>
+		</template>
+		
+	</template>
+	<script>
+		Polymer({
+			is: 'query-list-page',
+
+			properties: {
+				statuses: {
+					type: Array,
+					value: function() { return []; },
+				},
+
+				active: {
+					type: Boolean,
+					value: false,
+					reflectToAttribute: true,
+				},
+
+				loading: {
+					type: Boolean,
+					value: false,
+					notify: true,
+					readOnly: true,
+				},
+			},
+
+			observers: [
+				'_observeActive(active, statuses)',
+			],
+
+			listeners: {
+				'list.dom-change': '_handleDomChange',
+			},
+
+			/**
+			 * Public functions
+			 */
+			render: function(statuses, forceSynchronous=false) {
+				if(!statuses)
+					statuses = this.statuses;
+				this._setLoading(true);
+				var list = this.$.list;
+				list.items = this.statuses;
+				if(forceSynchronous)
+					list.render();
+			},
+
+			/**
+			 * Observe functions
+			 */
+			_observeActive: function(active, statuses) {
+				if(this.active)
+					this.render(statuses);
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handleDomChange: function() {
+				if(this.loading) {
+					this._setLoading(false);
+					this.fire('query-page-loaded', {'value': this});
+				}
+			},
+		});
+	</script>
+</dom-module>

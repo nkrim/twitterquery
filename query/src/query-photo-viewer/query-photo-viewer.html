@@ -38,14 +38,17 @@
 				left: 0;
 				right: 0;
 				bottom: 0;
+				pointer-events: none;
 			}
 
 			.controller {
 				height: 100%;
 				cursor: pointer;
+				pointer-events: auto;
 			}
 			.controller[disabled] {
 				visibility: hidden;
+				pointer-events: none;
 			}
 			.selection-controller {
 				@apply(--layout-horizontal);
@@ -291,7 +294,7 @@
 			},
 
 			_handleCenterControllerTap: function() {
-				this.fire('photo-overlay-open', {'photos': this.photos})
+				this.fire('photo-overlay-open', {'photos': this.photos, 'selected': this._getIndex()})
 			},
 
 			/**
