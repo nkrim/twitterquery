@@ -34,8 +34,10 @@ class SearchSerializer(serializers.ModelSerializer):
 		exclude = ('statuses',)
 
 class QueryInstanceSerializer(serializers.ModelSerializer):
+	status_count = serializers.IntegerField()
 	statuses = StatusSerializer(many=True)
 	photo_count = serializers.IntegerField()
+	photos = PhotoSerializer(many=True)
 
 	class Meta:
 		model = QueryInstance

@@ -1,6 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../bower_components/iron-scroll-threshold/iron-scroll-threshold.html">
 
 <link rel="import" href="../../bower_components/paper-spinner/paper-spinner-lite.html">
@@ -11,6 +12,7 @@
 <link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
 
 <link rel="import" href="../query-list-page/query-list-page.html">
+<link rel="import" href="../query-word-selector/query-word-selector.html">
 
 <dom-module id="query-list">
 	<template>
@@ -50,12 +52,18 @@
 			}
 
 			.results-header-container {
+				@apply(--layout-horizontal);
+				@apply(--layout-center);
+				padding: 12px 24px;
+			}
+			.results-header-message {
+				@apply(--layout-flex);
 				@apply(--layout-vertical);
-				padding: 24px 24px 12px;
 			}
 			.results-header-container .results-header {
 				@apply(--paper-font-display1);
 				font-weight: 500;
+				padding: 8px 0 0;
 			}
 			.results-header-container .results-message {
 				@apply(--paper-font-subhead);
@@ -64,29 +72,48 @@
 				display: none;
 			}
 
-			#loadMoreMessage {
+			.footer-message {
 				@apply(--layout-vertical);
 				@apply(--layout-center-center);
 				cursor: pointer;
-				height: 196px;
 				border-top: solid 1px rgba(0,0,0,0.3);
+				padding: 36px;
 			}
-			#loadMoreMessage[hidden] {
+			.footer-message[hidden] {
 				display: none;
 			}
-			#loadMoreMessage:hover {
+			.footer-message:hover {
 				background-color: rgba(0,0,0,0.05);
 			}
-			#loadMoreMessage span {
+			.footer-message span {
 				@apply(--paper-font-display1);
 				color: var(--primary-color, #55acee);
-				margin-top: 28px;
+			}
+			.footer-message iron-icon {
+				--iron-icon-width: 36px;
+				--iron-icon-height: 36px;
+				--iron-icon-fill-color: var(--primary-color, #55acee);
+			}
+
+			@keyframes spin {
+				from {
+					-webkit-transform: rotate(0deg);
+					-moz-transform: rotate(0deg);
+					-o-transform: rotate(0deg);
+					transform: rotate(0deg);
+				}
+				to {
+					-webkit-transform: rotate(360deg);
+					-moz-transform: rotate(360deg);
+					-o-transform: rotate(360deg);
+					transform: rotate(360deg);
+				}
+			}
+			#loadMoreMessage[loading] iron-icon {
+				animation: spin 1s ease-in-out 0s infinite;
 			}
 			#loadMoreMessage[loading] span {
 				font-weight: 500;
-			}
-			#loadMoreMessage paper-spinner-lite {
-				--paper-spinner-color: var(--primary-color, #55acee);
 			}
 		</style>
 
@@ -103,15 +130,25 @@
 		    	<div>
 		    		<div id="dataContainer" class="result-container">
 			    		<div class="results-header-container" hidden$="[[_computeDataHeaderHidden(_state)]]">
-			    			<span class="results-header">Results:</span>
-			    			<span class="results-message">[[_computeDataMessage(data)]]</span>
+			    			<div class="results-header-message">
+				    			<span class="results-header">Results:</span>
+				    			<span class="results-message">[[_computeDataMessage(data)]]</span>
+				    		</div>
+				    		<query-word-selector id="layoutSelector">
+				    			<span>Statuses</span>
+				    			<span>Photos</span>
+				    		</query-word-selector>
 			    		</div>
 			    		<template id="list" is="dom-repeat" items="[[_pages]]">
 			    			<query-list-page statuses="[[item]]"></query-list-page>
 			    		</template>
-			    		<div id="loadMoreMessage" hidden$="[[!_nextToLoad]]" loading$="[[_loadingPage]]">
+			    		<div id="loadMoreMessage" class="footer-message" hidden$="[[!_nextToLoad]]" loading$="[[_loadingPage]]">
+			    			<iron-icon icon="autorenew"></iron-icon>
 							<span>More Statuses...</span>
-							<paper-spinner-lite class="spinner" active="[[_loadingPage]]"></paper-spinner-lite>
+						</div>
+						<div id="backToTop" class="footer-message" hidden$="[[_nextToLoad]]">
+							<iron-icon icon="expand-less"></iron-icon>
+							<span>Back to Top</span>
 						</div>
 			    	</div>
 			    </div>
@@ -170,6 +207,12 @@
 					observer: '_stateChanged',
 				},
 
+				_mode: {
+					type: Number,
+					value: 0,
+					readOnly: true,
+				},
+
 				_pages: {
 					type: Array,
 					value: function() { return []; },
@@ -195,6 +238,7 @@
 				'query-page-loaded': '_handleQueryPageLoaded',
 				'loadMoreThreshold.lower-threshold': '_handleLoadMore',
 				'loadMoreMessage.tap': '_handleLoadMore',
+				'backToTop.tap': '_handleBackToTop',
 			},
 
 			ready: function() {
@@ -325,9 +369,9 @@
 
 			_computeDataMessage: function(data) {
 				if(data) {
-					var length = data.statuses.length;
-					var photo_count = 'photo_count' in data ? data.photo_count : null;
-					return 'Found '+length+' status'+(length !== 1 ? 'es' : '')+(photo_count!==null ? ' with '+photo_count+' photo'+(photo_count!==1 ? 's' : '') : '');
+					var status_count = 'status_count' in data ? data.status_count : ('statuses' in data && typeof data.statuses === 'object' ? data.statuses.length : null);
+					var photo_count = 'photo_count' in data ? data.photo_count : ('photos' in data && typeof data.photos === 'object' ? data.photos.length : null);
+					return 'Found '+status_count+' status'+(status_count !== 1 ? 'es' : '')+(photo_count!==null ? ' with '+photo_count+' photo'+(photo_count!==1 ? 's' : '') : '');
 				}
 				return '';
 			},
@@ -375,6 +419,10 @@
 				this.resetHeight();
 				var scrollTo = page.getBoundingClientRect().top - document.body.getBoundingClientRect().top - 192;
 				Polymer.dom(document.body).querySelector('#app').scroll(scrollTo);
+			},
+
+			_handleBackToTop: function() {
+				Polymer.dom(document.body).querySelector('#app').scroll(192);
 			},
 		});
 	</script>

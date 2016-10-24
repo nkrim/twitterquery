@@ -1,0 +1,111 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-selector/iron-selectable.html">
+
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<dom-module id="query-word-selector">
+	<!-- STRIP WHITESPACE IS SET -->
+	<template strip-whitespace>
+		<style>
+			:host {
+				display: block;
+			}
+
+			:host([vertical]) .content-wrapper ::content {
+				@apply(--layout-vertical);
+			}
+			:host([vertical]) .content-wrapper ::content > * {
+				width: 100%;
+			}
+			:host(:not([vertical])) .content-wrapper ::content {
+				@apply(--layout-horizontal);
+			}
+			:host(:not([vertical])) .content-wrapper ::content > * {
+				height: 100%;
+			}
+
+			.content-wrapper {
+				color: var(--query-word-selector-color, var(--primary-color, #55acee));
+			}
+			.content-wrapper ::content > * {
+				@apply(--layout-flex);
+				@apply(--paper-font-title);
+				position: relative;
+				cursor: pointer;
+				padding: 8px 16px;
+				border: 1px solid var(--query-word-selector-color, var(--primary-color, #55acee));;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				text-align: center;
+				text-transform: uppercase;
+			}
+			.content-wrapper ::content > *:before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background-color: var(--query-word-selector-color, var(--primary-color, #55acee));
+				opacity: 0;
+			}
+			.content-wrapper ::content > *:hover:before {
+				opacity: 0.1;
+			}
+			.content-wrapper ::content > *.iron-selected {
+				color: #fff;
+				background-color: var(--query-word-selector-color, var(--primary-color, #55acee));;
+			}
+			.content-wrapper ::content > *:first-child {
+				border-top-left-radius: 4px;
+				border-bottom-left-radius: 4px;
+			}
+			.content-wrapper ::content > *:last-child {
+				border-top-right-radius: 4px;
+				border-bottom-right-radius: 4px;
+			}
+		</style>
+		
+		<div class="content-wrapper">
+			<content select="span,.query-word"></content>
+		</div>
+	</template>
+	<script>
+		Polymer({
+			is: 'query-word-selector',
+
+			behaviors: [Polymer.IronSelectableBehavior],
+
+			properties: {
+				vertical: {
+					type: Boolean,
+					value: false,
+					reflectToAttribute: true,
+				},
+
+				fallbackSelection: {
+					type: String,
+					value: '0',
+				},
+
+				value: {
+					type: String,
+					notify: true,
+					readOnly: true,
+					computed: '_computeValue(selectedItem)',
+				}
+			},
+
+			/**
+			 * Compute functions
+			 */
+			_computeValue: function(selectedItem) {
+				var value = selectedItem && selectedItem.textContent ? selectedItem.textContent : ''; 
+				value = value.trim().toLowerCase();
+				return value.replace(/\W+/g, '-');
+			},
+		});
+	</script>
+</dom-module>

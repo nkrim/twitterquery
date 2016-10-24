@@ -107,6 +107,9 @@ class QueryInstance(models.Model):
 	def statuses(self):
 		return self.search.statuses.filter(status_id__lte=self.max_id)[:self.limit] if self.success else Status.objects.none()
 
+	def status_count(self):
+		return self.statuses().count()
+
 	def photos(self):
 		statuses = list(self.statuses())
 		return Photo.objects.prefetch_related('statuses').filter(status__in=statuses).distinct()

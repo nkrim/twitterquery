@@ -1,0 +1,56 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../query-photo/query-photo.html">
+
+<dom-module id="query-photo-list">
+	<template>
+		<style>
+			:host {
+				@apply(--layout-horizontal);
+				@apply(--layout-wrap);
+				@apply(--layout-justified);
+			}
+
+			query-photo: {
+				border: 1px solid rgba(0,0,0,0.2);
+				border-radius: 4px;
+				margin: 8px;
+			}
+		</style>
+		
+		<template id="list" is="dom-repeat" items="[[photos]]">
+			<query-photo 	photo-url="[[item.photo_url]]"
+							sizing="cover"
+							height="[[item.height]]"
+							width="[[item.width]]"
+	    					max-height="[[_height]]"
+	    					max-width="[[maxWidth]]"
+	    					style="height: [[photoHeight]]; width: [[photoWidth]];">
+	    				</query-photo>
+		</template>
+	</template>
+	<script>
+		Polymer({
+			is: 'query-photo-list',
+
+			properties: {
+				photos: {
+					type: Array,
+					value: function() { return []; },
+				},
+
+				photoHeight: {
+					type: Number,
+					value: 256,
+				},
+
+				photoWidth: {
+					type: Number,
+					value: 192
+				},
+			},
+		});
+	</script>
+</dom-module>
