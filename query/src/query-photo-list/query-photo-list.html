@@ -11,23 +11,26 @@
 				@apply(--layout-horizontal);
 				@apply(--layout-wrap);
 				@apply(--layout-justified);
+				padding: 16px;
 			}
 
-			query-photo: {
+			query-photo {
 				border: 1px solid rgba(0,0,0,0.2);
 				border-radius: 4px;
 				margin: 8px;
+				cursor: pointer;
 			}
 		</style>
 		
-		<template id="list" is="dom-repeat" items="[[photos]]">
-			<query-photo 	photo-url="[[item.photo_url]]"
+		<template id="list" is="dom-repeat" items="[[_computeAutoItems(photos,noAutoRender)]]">
+			<query-photo 	active
+							photo-url="[[item.photo_url]]"
 							sizing="cover"
 							height="[[item.height]]"
 							width="[[item.width]]"
-	    					max-height="[[_height]]"
-	    					max-width="[[maxWidth]]"
-	    					style="height: [[photoHeight]]; width: [[photoWidth]];">
+	    					max-height="[[photoHeight]]"
+	    					max-width="[[photoWidth]]"
+	    					on-tap="_handlePhotoTap">
 	    				</query-photo>
 		</template>
 	</template>
@@ -50,6 +53,41 @@
 					type: Number,
 					value: 192
 				},
+
+				noAutoRender: {
+					type: Boolean,
+					value: false,
+				},
+			},
+
+			/**
+			 * Public functions
+			 */
+			render: function(photos, forceSynchronous=false) {
+				if(!photos)
+					photos = this.photos;
+				//this._setLoading(true);
+				var list = this.$.list;
+				list.items = this.photos;
+				if(forceSynchronous)
+					list.render();
+			},
+
+			/**
+			 * Compute functions
+			 */
+			_computeAutoItems: function(photos, noAutoRender) {
+				if(!noAutoRender)
+					return photos;
+				return this.$.list.items;
+			},
+
+			/**
+			 * Event handlers
+			 */
+			_handlePhotoTap: function(e) {
+				var index = this.$.list.indexForElement(e.target);
+				this.fire('photo-overlay-open', {'photos': this.photos, 'selected': index})
 			},
 		});
 	</script>

@@ -7,7 +7,9 @@ from base64 import urlsafe_b64encode
 from datetime import datetime
 import json
 import os
+import sys
 from time import sleep
+import traceback
 from urllib.parse import quote_plus, urlencode, urlparse
 from urllib.request import Request, urlopen
 import zipfile
@@ -141,10 +143,10 @@ def query(request):
 						s.created_by.delete()
 					s.delete()
 			search.delete()
-			return (False, JsonResponse({'success':False, 'code':6, 'error':'Exception during status iteration: '+str(e)}, status=500))
+			return (False, JsonResponse({'success':False, 'code':6, 'error':'Exception during status iteration: '+str(e)+':\n'+traceback.format_tb(sys.exc_info()[2])}, status=500))
 		# Check for overlap and then merge
-		overlaps = Search.objects.filter(query=search.query, max_id__gte=search.min_id).exclude(pk=search.pk)
-		for o in overlaps:
+		o = Search.objects.filter(query=search.query, max_id__gte=search.min_id).exclude(pk=search.pk).first()
+		while o:
 			search.instances.update(search=o)
 			o.statuses.add(*search.statuses.prefetch_related('searches').exclude(search=o))
 			o.max_id = max(o.max_id, search.max_id)
@@ -152,6 +154,7 @@ def query(request):
 			search.delete()
 			o.save()
 			search = o
+			o = Search.objects.filter(query=search.query, max_id__gte=search.min_id).exclude(pk=search.pk).first()
 		return (True, search)
 	# MAIN BODY FOR QUERY
 	# Parse query params
@@ -195,8 +198,6 @@ def query(request):
 		if not success:
 			return results
 		search = results
-	else:
-		search.save()
 
 	# Repeat and iterate until the limit is reached or no more posts can be found
 	while instance.statuses().count() < instance.limit:
@@ -214,9 +215,9 @@ def query(request):
 		if not success:
 			return results
 		search = results
-		search.save()
 
 	# Return queryinstance withcompleted search
+	search.save()
 	instance.refresh_from_db(fields=('search',))
 	instance.success = True
 	instance.save()
@@ -226,7 +227,7 @@ def get(request, query_pk):
 	instance = get_object_or_404(QueryInstance, pk=query_pk)
 	# Save search object to update access time
 	instance.search.save()
-	return makeJsonResponse(QueryInstanceSerializer(instance).data)
+	return makeJsonResponsePretty(QueryInstanceSerializer(instance).data)
 
 def download(request, query_pk):
 	# HELPER FUNCTIONS FOR DOWNLOAD

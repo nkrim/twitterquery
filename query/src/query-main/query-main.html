@@ -51,6 +51,13 @@
 					value: 0,
 				},
 
+				layout: {
+					type: String,
+					value: '',
+					notify: true,
+					observer: '_layoutChanged',
+				},
+
 				success: {
 					type: Boolean,
 					value: false,
@@ -68,6 +75,11 @@
 
 			listeners: {
 				'ajax.data-changed': '_handleDataChanged',
+				'list.layout-changed': '_handleListLayoutChanged',
+			},
+
+			created: function() {
+				this.layoutMap = ['statuses', 'photos'];
 			},
 
 			/**
@@ -83,6 +95,23 @@
 
 			resetHeight: function() {
 				this.$.list.resetHeight();
+			},
+
+			/**
+			 * Property observers
+			 */
+			_layoutChanged: function(layout) {
+				if(this.layoutChangedInternally)
+					this.layoutChangedInternally = false;
+				else if(layout) {
+					for(var i=0; i<this.layoutMap.length; i++) {
+						if(layout === this.layoutMap[i]) {
+							this.$.list.layout = i;
+							return;
+						}
+					}
+					this.layout = '';
+				}
 			},
 
 			/**
@@ -107,6 +136,12 @@
 					this._setQueryId('');
 					console.log(results.error);
 				}
+			},
+
+			_handleListLayoutChanged: function(e) {
+				var value = e.detail.value;
+				this.layoutChangedInternally = true;
+				this.layout = this.layoutMap[value];
 			},
 		});
 	</script>

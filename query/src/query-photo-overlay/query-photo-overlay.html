@@ -38,6 +38,11 @@
 				z-index: 1;
 			}
 
+			query-photo {
+				height: 100%;
+				width: 100%;
+			}
+
 			.count-header {
 				@apply(--paper-font-title);
 				@apply(--layout-horizontal);
@@ -238,6 +243,7 @@
 
 			listeners: {
 				'iron-overlay-opened': '_handleOpened',
+				'iron-overlay-closed': '_handleClosed',
 				'pages.iron-select': '_handlePagesSelect',
 				'pages.iron-items-changed': '_handlePagesItemsChanged',
 				'leftController.tap': '_handleLeftControllerTap',
@@ -294,8 +300,6 @@
 						if(p.height >= height && p.width >= width) {
 							var heightRatio = height/p.height;
 							var widthRatio = width/p.width;
-							console.log(heightRatio);
-							console.log(widthRatio);
 							if(heightRatio <= widthRatio) {
 								maxHeight = height;
 								maxWidth = Math.max(maxWidth, p.width*heightRatio);
@@ -328,6 +332,10 @@
 			 */
 			_handleOpened: function() {
 				this._setMaxHeightWidth();
+			},
+
+			_handleClosed: function() {
+				this.$.pages._prevSelected = null;
 			},
 
 			_handlePagesSelect: function() {

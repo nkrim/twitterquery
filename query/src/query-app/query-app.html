@@ -199,7 +199,7 @@
             </paper-button>
           </a>
           <div class="search-container">
-            <query-search-bar id="searchBar" placeholder="Enter your query here"></query-search-bar>
+            <query-search-bar id="searchBar" placeholder="Enter your query here" bind-value="[[query]]"></query-search-bar>
           </div>
           <paper-button id="searchButton"><iron-icon icon="search"></iron-icon></iron-icon></paper-button>
           <paper-icon-button id="settings" icon="settings"></paper-icon-button>
@@ -222,7 +222,7 @@
 
 
       <div class="main-container">
-        <query-main id="main" success="{{success}}" query-id="{{queryId}}" limit="[[limit]]"></query-main>
+        <query-main id="main" success="{{success}}" query-id="{{queryId}}" limit="[[limit]]" layout="{{layout}}"></query-main>
       </div>
     </app-header-layout>
 
@@ -258,15 +258,31 @@
             }
           },
         },
+
+        query: {
+          type: String,
+        },
+
+        limit: {
+          type: Number,
+        },
+
+        layout: {
+          type: String,
+        },
       },
+
+      observers: [
+        '_observeParams(query, limit, layout)',
+      ],
 
       listeners: {
         'location.query-params-changed': '_handleQueryParamsChanged',
         'mainTitle.tap': '_handleTitleTap',
         'photo-overlay-open': '_handlePhotoOverlayOpen',
         'searchBar.search-enter': '_handleSearchEnter',
-        'searchBar.search-button-down': '_handleSearchButonDown',
-        'searchBar.search-button-up': '_handleSearchButonUp',
+        'searchBar.search-button-down': '_handleSearchButtonDown',
+        'searchBar.search-button-up': '_handleSearchButtonUp',
         'searchButton.tap': '_handleSearchButton',
         'settings.tap': '_handleSettings',
       }, 
@@ -293,6 +309,8 @@
       },
 
       search: function(query) {
+        if(query === undefined)
+          query = this.query;
         var main = this.$.main;
         main.query = query;
         main.clear();
@@ -341,30 +359,47 @@
       /**
        * Private functions
        */
-      _setLocationParams: function(query, limit) {
+      _setLocationParams: function(query, limit, layout) {
         var params = {};
-        if(query !== '') {
+        if(query) {
           params['q'] = query;
           if(limit > 0)
             params['limit'] = limit;
+          if(layout && layout !== 'statuses')
+            params['layout'] = layout;
         }
+        this.queryParamsInternallyChanged = true;
         this.$.location.queryParams = params;
       },
 
       _parseLocationParams: function(params=null) {
+        if(this.queryParamsInternallyChanged) {
+          this.queryParamsInternallyChanged = false;
+          return;
+        }
         if(!params)
           params = this.$.location.queryParams;
+        if('layout' in params) {
+          this.layout = params.layout;
+        }
         if('limit' in params ) {
           var limit = parseInt(params.limit);
           if(limit !== null) {
-            this.$.main.limit = limit;
+            this.limit = limit;
           }
         }
         if('q' in params) {
           var query = decodeURIComponent(params.q);
-          this.$.searchBar.bindValue = query;
-          this.search(query);
+          this.query = query;
+          this.search();
         }
+      },
+
+      /**
+       * Property observers
+       */
+      _observeParams: function(query, limit, layout) {
+        this._setLocationParams(query, limit, layout);
       },
 
       /**
@@ -400,25 +435,21 @@
       },
 
       _handleSearchEnter: function(e) {
-        this.search(e.detail.value);
-        // Set app-location queryParams
-        var main = this.$.main;
-        this._setLocationParams(main.query, main.limit);
+        this.query = e.detail.value;
+        this.search();
       },
 
-      _handleSearchButonDown: function(e) {
+      _handleSearchButtonDown: function(e) {
         this.$.searchButton.getRipple().downAction();
       },
 
-      _handleSearchButonUp: function(e) {
+      _handleSearchButtonUp: function(e) {
         this.$.searchButton.getRipple().upAction();
       },
 
       _handleSearchButton: function(e) {
-        this.search(this.$.searchBar.value);
-        // Set app-location queryParams
-        var main = this.$.main;
-        this._setLocationParams(main.query, main.limit);
+        this.query = this.$.searchBar.value;
+        this.search();
       },
 
       _handleSettings: function(e) {
