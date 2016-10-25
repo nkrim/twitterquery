@@ -187,6 +187,7 @@
     </style>
 
     <app-location id="location"></app-location>
+    <app-location id="locationHash" use-hash-as-path></app-location>
 
     <app-header-layout>
       <app-header id="searchHeader" condenses fixed effects="blend-background">
@@ -269,15 +270,13 @@
 
         layout: {
           type: String,
+          observer: '_observeLayout',
         },
       },
 
-      observers: [
-        '_observeParams(query, limit, layout)',
-      ],
-
       listeners: {
         'location.query-params-changed': '_handleQueryParamsChanged',
+        'locationHash.route-changed': '_handleHashPathChanged',
         'mainTitle.tap': '_handleTitleTap',
         'photo-overlay-open': '_handlePhotoOverlayOpen',
         'searchBar.search-enter': '_handleSearchEnter',
@@ -290,7 +289,13 @@
       ready: function() {
         this.isReady = true;
         // Intialize off of query paramters
-        this._parseLocationParams();
+        var canSearch = this._parseLocationParams();
+        if(canSearch)
+          this.search();
+        // Initialize off of hash path
+        var hashPath = (this.$.locationHash.path.match(/^\w+/) || [''])[0];
+        if(this.layout != hashPath)
+          this.layout = hashPath;
       },
 
       attached: function() {
@@ -309,12 +314,14 @@
       },
 
       search: function(query) {
+        console.log('search');
         if(query === undefined)
           query = this.query;
         var main = this.$.main;
         main.query = query;
         main.clear();
         this.scrollToTop();
+        this._setLocationParams();
         main.makeQuery();
       },
 
@@ -360,6 +367,13 @@
        * Private functions
        */
       _setLocationParams: function(query, limit, layout) {
+        if(query === undefined)
+          query = this.query;
+        if(limit === undefined)
+          limit = this.limit;
+        if(layout === undefined)
+          layout = this.layout;
+
         var params = {};
         if(query) {
           params['q'] = query;
@@ -368,38 +382,35 @@
           if(layout && layout !== 'statuses')
             params['layout'] = layout;
         }
-        this.queryParamsInternallyChanged = true;
         this.$.location.queryParams = params;
       },
 
-      _parseLocationParams: function(params=null) {
-        if(this.queryParamsInternallyChanged) {
-          this.queryParamsInternallyChanged = false;
-          return;
-        }
+      _parseLocationParams: function(params) {
+        var diff = false;
         if(!params)
           params = this.$.location.queryParams;
-        if('layout' in params) {
-          this.layout = params.layout;
-        }
         if('limit' in params ) {
           var limit = parseInt(params.limit);
           if(limit !== null) {
+            diff |= this.limit !== limit;
             this.limit = limit;
           }
         }
         if('q' in params) {
           var query = decodeURIComponent(params.q);
+          diff |= this.query !== query;
           this.query = query;
-          this.search();
+          return diff && this.query;
         }
+        return false;
       },
 
       /**
        * Property observers
        */
-      _observeParams: function(query, limit, layout) {
-        this._setLocationParams(query, limit, layout);
+      _observeLayout: function(layout) {
+        if(layout)
+          this.$.locationHash.path = layout !== 'statuses' ? layout : '';
       },
 
       /**
@@ -417,7 +428,18 @@
       _handleQueryParamsChanged: function(e) {
         if(!this.isReady)
           return;
-        this._parseLocationParams(e.detail.value || {});
+        var canSearch = this._parseLocationParams(e.detail.value);
+        if(canSearch) {
+          this.search();
+        }
+      },
+
+      _handleHashPathChanged: function(e) {
+        if(!this.isReady)
+          return;
+        var hashPath = (e.detail.value.path.match(/^\w+/) || [''])[0];
+        if(this.layout != hashPath)
+          this.layout = hashPath;
       },
 
       _handleTitleTap: function() {

@@ -96,16 +96,6 @@
 					readOnly: true,
 					computed: '_computeValue(selectedItem)',
 				},
-
-				selectedIndex: {
-					type: Number,
-					notify: true,
-					observer: '_observeSelectedIndex',
-				},
-			},
-
-			listeners: {
-				'iron-activate': '_handleIronActivate',
 			},
 
 			/**
@@ -118,34 +108,12 @@
 			},
 
 			/**
-			 * Property observers
-			 */	
-			_observeSelectedIndex: function(selectedIndex) {
-				if(!this.selectedIndexChangedInternally)
-					this.selectIndex(selectedIndex);
-				else
-					this.selectedIndexChangedInternally = false;
-			},
-
-			/**
 			 * Compute functions
 			 */
 			_computeValue: function(selectedItem) {
 				var value = selectedItem && selectedItem.textContent ? selectedItem.textContent : ''; 
 				value = value.trim().toLowerCase();
 				return value.replace(/\W+/g, '-');
-			},
-
-			/**
-			 * Event handlers
-			 */
-			_handleIronActivate: function(e) {
-				var value = e.detail.selected;
-				var index = this._valueToIndex(value);
-				if(index !== this.selectedIndex) {
-					this.selectedIndexChangedInternally = true;
-					this.selectedIndex = index;
-				}
 			},
 		});
 	</script>

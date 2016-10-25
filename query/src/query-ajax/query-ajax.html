@@ -107,6 +107,7 @@
 						data_cur = {'data': response.data}
 					}
 					else if('empty' in response) {
+						success = true;
 						data_cur = {'message': 'No statuses satisfy the search'};
 					}
 					else {

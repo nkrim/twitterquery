@@ -36,12 +36,14 @@
 				statuses: {
 					type: Array,
 					value: function() { return []; },
+					observer: '_observeStatuses',
 				},
 
 				active: {
 					type: Boolean,
 					value: false,
 					reflectToAttribute: true,
+					observer: '_observeActive',
 				},
 
 				loading: {
@@ -51,10 +53,6 @@
 					readOnly: true,
 				},
 			},
-
-			observers: [
-				'_observeActive(active, statuses)',
-			],
 
 			listeners: {
 				'list.dom-change': '_handleDomChange',
@@ -76,9 +74,13 @@
 			/**
 			 * Observe functions
 			 */
-			_observeActive: function(active, statuses) {
+			_observeStatuses: function(statuses) {
+				this.active = false;
+			},
+
+			_observeActive: function(active) {
 				if(this.active)
-					this.render(statuses);
+					this.render(this.statuses);
 			},
 
 			/**

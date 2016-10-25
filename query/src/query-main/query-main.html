@@ -26,7 +26,7 @@
 		</style>
 		
 		<query-ajax
-			id="ajax" auto
+			id="ajax"
 			query="[[query]]"
 			limit="[[limit]]"
 			loading="{{loading}}">
@@ -122,20 +122,23 @@
 				if(results === null)
 					return;
 				if(!this.$.ajax.error) {
-					this.$.list.error = '';
-					this.$.list.message = results.message || '';
-					this.$.list.data = results.data || null;
-					this._setSuccess('data' in results);
-					this._setQueryId(this.success ? results.data.id : '');
+					if(results.data) {
+						this.$.list.data = results.data;
+						this._setSuccess(true);
+						this._setQueryId(this.success ? results.data.id : '');
+						return;
+					}
+					else if(results.message)
+						this.$.list.message = results.message;
 				}
 				else {
 					this.$.list.data = null;
 					this.$.list.message = '';
 					this.$.list.error = results.error || 'Error';
-					this._setSuccess(false);
-					this._setQueryId('');
 					console.log(results.error);
 				}
+				this._setSuccess(false);
+				this._setQueryId('');
 			},
 
 			_handleListLayoutChanged: function(e) {

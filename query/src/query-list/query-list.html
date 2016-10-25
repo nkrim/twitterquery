@@ -68,9 +68,6 @@
 				font-weight: 400;
 				white-space: normal;
 			}
-			.results-header-container[hidden] {
-				display: none;
-			}
 
 			.footer-message {
 				@apply(--layout-vertical);
@@ -126,7 +123,7 @@
 		    	</div>
 		    	<div>
 		    		<div id="errorContainer" class="result-container">
-		    			<div class="results-header-container" hidden$="[[_computeErrorHeaderHidden(_state)]]">
+		    			<div class="results-header-container">
 		    				<div class="results-header-message">
 			    				<span class="results-header">Error:</span>
 			    				<span class="results-message">[[error]]</span>
@@ -139,12 +136,12 @@
 		    	</div>
 		    	<div>
 		    		<div id="statusesContainer" class="result-container">
-			    		<div class="results-header-container" hidden$="[[_computeDataHeaderHidden(_state)]]">
+			    		<div class="results-header-container">
 			    			<div class="results-header-message">
 				    			<span class="results-header">Results:</span>
 				    			<span class="results-message">[[_computeDataMessage(data)]]</span>
 				    		</div>
-				    		<query-word-selector id="layoutSelector" selected-index="{{layout}}">
+				    		<query-word-selector id="layoutSelector" selected="{{layout}}">
 				    			<span>Statuses</span>
 				    			<span>Photos</span>
 				    		</query-word-selector>
@@ -164,12 +161,12 @@
 			    </div>
 			    <div>
 			    	<div id="photosContainer" class="result-container">
-			    		<div class="results-header-container" hidden$="[[_computeDataHeaderHidden(_state)]]">
+			    		<div class="results-header-container">
 			    			<div class="results-header-message">
 				    			<span class="results-header">Results:</span>
 				    			<span class="results-message">[[_computeDataMessage(data)]]</span>
 				    		</div>
-				    		<query-word-selector id="layoutSelector" selected-index="{{layout}}">
+				    		<query-word-selector id="layoutSelector" selected="{{layout}}">
 				    			<span>Statuses</span>
 				    			<span>Photos</span>
 				    		</query-word-selector>
@@ -265,10 +262,6 @@
 			 */
 			clear: function() {
 				this._set_state(0);
-				this.data = null;
-				this.message = '';
-				this.error = '';
-				this._nextToLoad = null;
 			},
 
 			resetHeight: function(state=null, scroll=false, scrollCompensate=false) {
