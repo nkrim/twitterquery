@@ -104,7 +104,7 @@ def query(request):
 		return (True, {'posts': posts, 'max_id': results['search_metadata']['max_id'], 'min_id': min_id})
 	def construct_statuses(search, posts):
 		# Check for overlap and then link
-		next_search = Search.objects.filter(query=search.query, max_id__gte=search.min_id).exclude(pk=search.pk).first()
+		next_search = Search.objects.filter(query=search.query, max_id__gte=search.min_id, statuses__isnull=False).exclude(pk=search.pk).first()
 		if next_search:
 			next_search.save()
 			search.min_id = next_search.max_id+1
