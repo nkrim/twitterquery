@@ -366,21 +366,17 @@
       /**
        * Private functions
        */
-      _setLocationParams: function(query, limit, layout) {
+      _setLocationParams: function(query, limit) {
         if(query === undefined)
           query = this.query;
         if(limit === undefined)
           limit = this.limit;
-        if(layout === undefined)
-          layout = this.layout;
 
         var params = {};
         if(query) {
           params['q'] = query;
           if(limit > 0)
             params['limit'] = limit;
-          if(layout && layout !== 'statuses')
-            params['layout'] = layout;
         }
         this.$.location.queryParams = params;
       },
