@@ -49,7 +49,7 @@ class SearchAdmin(admin.ModelAdmin):
 	search_fields = ['query']
 	fieldsets = (
 		(None, {
-			'fields': ('pk', 'query', ('max_id', 'min_id'), 'last_accessed'),
+			'fields': ('pk', 'query', ('max_id', 'min_id'), 'next_search', 'last_accessed'),
 		}),
 	)
 	readonly_fields = ('pk','last_accessed')

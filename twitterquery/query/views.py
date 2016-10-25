@@ -214,8 +214,6 @@ def query(request):
 		search = results
 
 	# Return queryinstance withcompleted search
-	search.save()
-	instance.refresh_from_db(fields=('search',))
 	instance.success = True
 	instance.save()
 	return makeJsonResponse({'success':True, 'data': QueryInstanceSerializer(instance).data})
