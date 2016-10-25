@@ -103,8 +103,17 @@ def query(request):
 		posts = [p for p in posts if len(p['media']) > 0]
 		return (True, {'posts': posts, 'max_id': results['search_metadata']['max_id'], 'min_id': min_id})
 	def construct_statuses(search, posts):
+		# Check for overlap and then link
+		next_search = Search.objects.filter(query=search.query, max_id__gte=search.min_id).exclude(pk=search.pk).first()
+		if next_search:
+			next_search.save()
+			search.min_id = next_search.max_id+1
+			search.next_search = next_search
+			search.save()
 		try:
 			for p in posts:
+				if p['id'] < search.min_id:
+					continue
 				u = p['user']
 				user, user_created = TwitterUser.objects.update_or_create(	user_id=u['id'], 
 																			defaults={
@@ -144,18 +153,7 @@ def query(request):
 					s.delete()
 			search.delete()
 			return (False, JsonResponse({'success':False, 'code':6, 'error':'Exception during status iteration: '+str(e)+':\n'+traceback.format_tb(sys.exc_info()[2])}, status=500))
-		# Check for overlap and then merge
-		o = Search.objects.filter(query=search.query, max_id__gte=search.min_id).exclude(pk=search.pk).first()
-		while o:
-			search.instances.update(search=o)
-			o.statuses.add(*search.statuses.prefetch_related('searches').exclude(search=o))
-			o.max_id = max(o.max_id, search.max_id)
-			o.min_id = min(o.min_id, search.min_id)
-			search.delete()
-			o.save()
-			search = o
-			o = Search.objects.filter(query=search.query, max_id__gte=search.min_id).exclude(pk=search.pk).first()
-		return (True, search)
+		return (True, next_search or search)
 	# MAIN BODY FOR QUERY
 	# Parse query params
 	q = request.GET.get('q',None)
@@ -208,7 +206,6 @@ def query(request):
 		if 'empty' in results:
 			break
 		posts = results['posts']
-		search.max_id = max(search.max_id, results['max_id'])
 		search.min_id = min(search.min_id, results['min_id'])
 		# Construct statuses
 		success, results = construct_statuses(search, posts)
@@ -233,7 +230,7 @@ def download(request, query_pk):
 	# HELPER FUNCTIONS FOR DOWNLOAD
 	def zip_and_stream_photos(inst):
 		z = zipstream.ZipFile(mode='w')
-		status_ids = list(inst.statuses().values_list('status_id', flat=True))
+		status_ids = [s.status_id for s in inst.statuses()]
 		photos = list(inst.photos())
 		info = ['query_id: {}'.format(inst.pk), 'time of: {}'.format(inst.time_of), 'query: {}'.format(inst.query), 'limit: {}'.format(inst.limit),
 				'status count: {}'.format(len(status_ids)), 'photo count: {}'.format(len(photos))]
