@@ -38,10 +38,10 @@ class QueryInstanceAdmin(admin.ModelAdmin):
 	readonly_fields = ('pk', 'time_of')
 
 	def status_count(self, obj):
-		return obj.statuses().count()
+		return obj.status_count()
 
 	def photo_count(self, obj):
-		return obj.photos().count()
+		return obj.photo_count()
 
 class SearchAdmin(admin.ModelAdmin):
 	list_display = ('pk', 'query', 'status_count', 'photo_count', 'max_id', 'min_id', 'last_accessed')

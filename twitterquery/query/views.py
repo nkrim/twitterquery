@@ -104,7 +104,7 @@ def query(request):
 		return (True, {'posts': posts, 'max_id': results['search_metadata']['max_id'], 'min_id': min_id})
 	def construct_statuses(search, posts):
 		# Check for overlap and then link
-		next_search = Search.objects.filter(query=search.query, max_id__gte=search.min_id, statuses__isnull=False).exclude(pk=search.pk).first()
+		next_search = Search.objects.exclude(pk=search.pk).filter(query=search.query, max_id__gte=search.min_id, statuses__isnull=False).first()
 		if next_search:
 			next_search.save()
 			search.min_id = next_search.max_id+1
@@ -152,7 +152,7 @@ def query(request):
 						s.created_by.delete()
 					s.delete()
 			search.delete()
-			return (False, JsonResponse({'success':False, 'code':6, 'error':'Exception during status iteration: '+str(e)+':\n'+traceback.format_tb(sys.exc_info()[2])}, status=500))
+			return (False, JsonResponse({'success':False, 'code':6, 'error':'Exception during status iteration: '+str(e)+':\n'+str(traceback.format_tb(sys.exc_info()[2]))}, status=500))
 		return (True, next_search or search)
 	# MAIN BODY FOR QUERY
 	# Parse query params
@@ -198,7 +198,7 @@ def query(request):
 		search = results
 
 	# Repeat and iterate until the limit is reached or no more posts can be found
-	while instance.statuses().count() < instance.limit:
+	while instance.status_count() < instance.limit:
 		# Perform search
 		success, results = perform_search(auth, instance.query, search.min_id-1)
 		if not success:

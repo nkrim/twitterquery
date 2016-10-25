@@ -110,7 +110,7 @@ class QueryInstance(models.Model):
 		search = self.search
 		count = 0
 		while search and count < self.limit:
-			status_slice = search.statuses[:self.limit-count]
+			status_slice = search.statuses.all()[:self.limit-count]
 			statuses += status_slice
 			count += len(status_slice)
 			search = search.next_search
