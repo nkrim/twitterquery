@@ -97,9 +97,14 @@ def query(request):
 			return (True, {'posts': posts, 'empty':True})
 		min_id = min([p['id'] for p in posts])
 		# Filter posts
-		posts = [p for p in posts if not 'retweeted_status' in p and 'extended_entities' in p and 'media' in p['entities']]
+		posts = [p for p in posts 	if 		not 'retweeted_status' in p 
+									and 	'extended_entities' in p 
+									and 	'media' in p['entities'] 
+									and 	not ('protected' in p['user'] and p['user']['protected'])]
 		for p in posts:
-			p['media'] = [m for m in p['extended_entities']['media'] if 'type' in m and m['type'] == 'photo' and 'media_url' in m]
+			p['media'] = [m for m in p['extended_entities']['media'] 	if 		'type' in m 
+																		and 	m['type'] == 'photo' 
+																		and 	'media_url' in m]
 		posts = [p for p in posts if len(p['media']) > 0]
 		return (True, {'posts': posts, 'max_id': results['search_metadata']['max_id'], 'min_id': min_id})
 	def construct_statuses(search, posts):
@@ -225,38 +230,56 @@ def get(request, query_pk):
 	return makeJsonResponsePretty(QueryInstanceSerializer(instance).data)
 
 def download(request, query_pk):
-	# HELPER FUNCTIONS FOR DOWNLOAD
-	def zip_and_stream_photos(inst):
-		z = zipstream.ZipFile(mode='w')
-		status_ids = [s.status_id for s in inst.statuses()]
-		photos = list(inst.photos())
-		info = ['query_id: {}'.format(inst.pk), 'time of: {}'.format(inst.time_of), 'query: {}'.format(inst.query), 'limit: {}'.format(inst.limit),
-				'status count: {}'.format(len(status_ids)), 'photo count: {}'.format(len(photos))]
-		errors = []
-		for p in photos:
+	# HELPER CLASSES/FUNCTIONS FOR DOWNLOAD
+	class QueryZipFile(zipstream.ZipFile):
+		def __init__(self, qinst, *args, **kwargs):
+			if not isinstance(qinst, QueryInstance):
+				raise TypeError('qinst expected a QueryInstance object, but received %s' % qinst)
+			super().__init__(*args, **kwargs)
+			self.status_ids = [s.status_id for s in qinst.statuses()]
+			self.photos = list(qinst.photos())
+			for p in self.photos:
+				p.filename = '{}.{}'.format(p, p.photo_url.rpartition('.')[2])
+			self.info = [	'query_id: {}'.format(qinst.pk),	'time of: {}'.format(qinst.time_of),				'query: {}'.format(qinst.query), 			
+							'limit: {}'.format(qinst.limit),	'status count: {}'.format(len(self.status_ids)),	'photo count: {}'.format(len(self.photos))	]
+			self.errors = []
+
+		def __iter__(self):
+			for photo in self.photos: 
+				for data in self.__write_photo(photo):
+					yield data
+			self.writestr('info.txt', '\n'.join(self.info).encode())
+			if self.errors:
+				self.writestr('errors.txt', '\n'.join(self.errors).encode())
+			for data in super().__iter__():
+				yield data
+
+		def __write_photo(self, photo):
 			try:
-				filename = '{}.{}'.format(p, p.photo_url.rpartition('.')[2])
-				response = urlopen(p.photo_url)
+				response = urlopen(photo.photo_url)
 			except Exception as e:
-				errors.append('{}: {}'.format(filename, e))
+				self.__add_photo_error(photo, e)
+				return iter(())
 			else:
-				z.writestr(filename, response.read())
-				photo_statuses = list(p.statuses.filter(status_id__in=status_ids))
-				info.append('{}: {} status{} from this query'.format(filename, len(photo_statuses), 'es' if len(photo_statuses) != 1 else ''))
-				for s in photo_statuses:
-					info.append('\t{} - {}'.format(s, s.status_url()))
-		z.writestr('info.txt', '\n'.join(info).encode())
-		if errors: 
-			z.writestr('errors.txt', '\n'.join(errors).encode())
-		return z
+				self.__add_photo_info(photo)
+				return self._ZipFile__write(arcname=photo.filename, iterable=response)
+
+		def __add_photo_error(self, photo, e=None):
+			self.errors.append('{} - {}: {}'.format(photo, photo.photo_url, e or 'Unknown Error'))
+
+		def __add_photo_info(self, photo):
+			photo_statuses = list(photo.statuses.filter(status_id__in=self.status_ids))
+			photo_info = ['{}: {} status{} from this query'.format(photo.filename, len(photo_statuses), 'es' if len(photo_statuses) != 1 else '')]
+			photo_info += ['\t{} - {}'.format(s, s.status_url()) for s in photo_statuses]
+			self.info += photo_info
 	# Get search object
 	instance = get_object_or_404(QueryInstance, pk=query_pk)
 
-	# Zip and stream pictures
-	z = zip_and_stream_photos(instance)
-
 	# Save search object to update access time
 	instance.search.save()
+
+	# Zip and stream pictures
+	z = QueryZipFile(instance, compression=zipfile.ZIP_DEFLATED)
 
 	# Return response with zipstream
 	response = StreamingHttpResponse(z, content_type='application/zip')

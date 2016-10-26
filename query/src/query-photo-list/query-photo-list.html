@@ -58,6 +58,16 @@
 					type: Boolean,
 					value: false,
 				},
+
+				loading: {
+					type: Boolean,
+					value: false,
+					readOnly: true,
+				},
+			},
+
+			listeners: {
+				'list.dom-change': '_handleDomChange',
 			},
 
 			/**
@@ -66,7 +76,7 @@
 			render: function(photos, forceSynchronous=false) {
 				if(!photos)
 					photos = this.photos;
-				//this._setLoading(true);
+				this._setLoading(true);
 				var list = this.$.list;
 				list.items = this.photos;
 				if(forceSynchronous)
@@ -88,6 +98,13 @@
 			_handlePhotoTap: function(e) {
 				var index = this.$.list.indexForElement(e.target);
 				this.fire('photo-overlay-open', {'photos': this.photos, 'selected': index})
+			},
+
+			_handleDomChange: function() {
+				if(this.loading) {
+					this._setLoading(false);
+					this.fire('query-photo-page-loaded', {'value': this});
+				}
 			},
 		});
 	</script>

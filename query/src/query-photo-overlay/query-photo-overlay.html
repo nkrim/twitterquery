@@ -101,7 +101,7 @@
 			.controller {
 				@apply(--layout-horizontal);
 				@apply(--layout-center);
-				height: 50%;
+				height: 100%;
 				pointer-events: auto;
 				cursor: pointer;
 				opacity: 1;
@@ -349,13 +349,17 @@
 			},
 
 			_handleLeftControllerTap: function() {
-				this._set_right(false);
-				this.$.pages.selectPrevious();
+				if(this._getIndex() > 0) {
+					this._set_right(false);
+					this.$.pages.selectPrevious();
+				}
 			},
 
 			_handleRightControllerTap: function() {
-				this._set_right(true);
-				this.$.pages.selectNext();
+				if(this._getIndex() < this.$.pages.items.length-1) {
+					this._set_right(true);
+					this.$.pages.selectNext();
+				}
 			},
 
 			_handleCloseTap: function() {
