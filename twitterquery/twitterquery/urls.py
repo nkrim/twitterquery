@@ -16,7 +16,13 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 
+from django.shortcuts import redirect
+
+def redirectToIndex(request):
+	return redirect('/tq')
+
 urlpatterns = [
     url(r'^qadmin/', admin.site.urls),
-    url(r'^query/', include('query.urls', namespace='query'))
+    url(r'^query/', include('query.urls', namespace='query')),
+    url(r'^$', redirectToIndex)
 ]
