@@ -1,0 +1,16 @@
+branch-defaults:
+  eb-test:
+    environment: twitterquery
+environment-defaults:
+  twitterquery:
+    branch: null
+    repository: null
+global:
+  application_name: twitterquery
+  branch: null
+  default_ec2_keyname: tq-eb
+  default_platform: Python 3.4
+  default_region: us-west-2
+  profile: eb-cli
+  repository: null
+  sc: git
