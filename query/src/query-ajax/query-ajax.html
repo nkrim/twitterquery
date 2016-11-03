@@ -6,7 +6,7 @@
 	<template>
 		<iron-ajax
 			id="ajax"
-			url="http://hub.sammusicbiz.com/query"
+			url="/query"
 			params="[[_computeParams(query,limit)]]"
 			handle-as="json"
 			loading="{{loading}}"
